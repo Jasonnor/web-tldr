@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "Web TL;DR for NotebookLM - Page Summary",
+  "version": "1.0.0",
+  "description": "Import the current webpage into NotebookLM and automatically get a TL;DR summary",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Summarize with NotebookLM"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://notebooklm.google.com/notebook/*"
+      ],
+      "js": [
+        "controller.js"
+      ]
+    }
+  ],
+  "host_permissions": [
+    "https://notebooklm.google.com/"
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
