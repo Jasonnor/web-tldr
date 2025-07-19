@@ -350,7 +350,7 @@ async function importAndSummarizeWebpage() {
         updateToast(`Web TL;DR: Adding URL: ${url.substring(0, 30)}${url.length > 30 ? '...' : ''}`);
 
         // Find the input, paste the URL, and click import
-        const urlInput = await waitForElement('input[formcontrolname="newUrl"]');
+        const urlInput = await waitForElement('textarea[formcontrolname="newUrl"]');
         urlInput.value = url;
         urlInput.dispatchEvent(new Event('input', {bubbles: true}));
         updateToast("Web TL;DR: Importing webpage...");
