@@ -365,8 +365,12 @@ async function importAndSummarizeWebpage() {
 
         // Only run if the textarea is empty to avoid issues on reloads
         if (promptTextarea.value === "") {
-            updateToast("Web TL;DR: Entering TL;DR prompt...");
-            promptTextarea.value = "TL;DR";
+            // Get the prompt text from settings, default to "TL;DR" if not set
+            const promptData = await chrome.storage.local.get({ promptText: 'TL;DR' });
+            const promptText = promptData.promptText;
+
+            updateToast(`Web TL;DR: Entering "${promptText}" prompt...`);
+            promptTextarea.value = promptText;
             promptTextarea.dispatchEvent(new Event('input', {bubbles: true}));
 
             // Wait for the submitting button to become enabled
