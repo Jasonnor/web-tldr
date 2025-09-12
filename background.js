@@ -9,11 +9,15 @@ chrome.action.onClicked.addListener(async (tab) => {
         await chrome.storage.local.set({'urlToSummarize': urlToSummarize});
 
         // Open NotebookLM in a new tab, immediately to the right of the current tab
+        // Read user preference for opening in background (default: false)
+        const { openInBackground = false } = await chrome.storage.local.get({ openInBackground: false });
+
         const notebookTab = await chrome.tabs.create({
             url: "https://notebooklm.google.com/",
             index: tab.index + 1,
             windowId: tab.windowId,
-            openerTabId: tab.id
+            openerTabId: tab.id,
+            active: !openInBackground
         });
 
         // Set up a listener to wait for the tab to finish loading
