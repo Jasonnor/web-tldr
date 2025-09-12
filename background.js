@@ -1,28 +1,25 @@
-chrome.action.onClicked.addListener(async (tab) => {
+async function launchSummarization(urlToSummarize, sourceTab) {
     try {
-        // Get the URL to summarize for this invocation
-        const urlToSummarize = tab.url;
         if (!urlToSummarize || urlToSummarize.startsWith('chrome://')) {
             console.error("Invalid URL for summarization.");
             return;
         }
         await chrome.storage.local.set({'urlToSummarize': urlToSummarize});
 
-        // Open NotebookLM in a new tab, immediately to the right of the current tab
         // Read user preference for opening in background (default: false)
-        const { openInBackground = false } = await chrome.storage.local.get({ openInBackground: false });
+        const {openInBackground = false} = await chrome.storage.local.get({openInBackground: false});
 
+        // Open NotebookLM in a new tab, immediately to the right of the current tab
         const notebookTab = await chrome.tabs.create({
             url: "https://notebooklm.google.com/",
-            index: tab.index + 1,
-            windowId: tab.windowId,
-            openerTabId: tab.id,
+            index: typeof sourceTab?.index === 'number' ? sourceTab.index + 1 : undefined,
+            windowId: sourceTab?.windowId,
+            openerTabId: sourceTab?.id,
             active: !openInBackground
         });
 
         // Set up a listener to wait for the tab to finish loading
         const listener = (tabId, changeInfo, tab) => {
-            // Make sure this is the tab we just opened and it's fully loaded
             if (
                 tabId === notebookTab.id &&
                 changeInfo.status === 'complete' &&
@@ -43,14 +40,54 @@ chrome.action.onClicked.addListener(async (tab) => {
                     files: ["controller.js"]
                 });
 
-                // Remove the listener so it doesn't fire again
                 chrome.tabs.onUpdated.removeListener(listener);
             }
         };
 
         chrome.tabs.onUpdated.addListener(listener);
-
     } catch (error) {
         console.error("[Web TL;DR for NotebookLM - background] An error occurred: ", error);
+    }
+}
+
+// Toolbar button click
+chrome.action.onClicked.addListener(async (tab) => {
+    const urlToSummarize = tab?.url;
+    await launchSummarization(urlToSummarize, tab);
+});
+
+// Create context menus on install/update
+chrome.runtime.onInstalled.addListener(() => {
+    try {
+        chrome.contextMenus.removeAll(() => {
+            // Summarize this page
+            chrome.contextMenus.create({
+                id: 'web-tldr-summarize-page',
+                title: 'Summarize this page with NotebookLM',
+                contexts: ['page']
+            });
+            // Summarize link target
+            chrome.contextMenus.create({
+                id: 'web-tldr-summarize-link',
+                title: 'Summarize linked page with NotebookLM',
+                contexts: ['link']
+            });
+        });
+    } catch (e) {
+        console.error('[Web TL;DR] Failed to create context menus', e);
+    }
+});
+
+// Handle context menu clicks
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+    try {
+        if (info.menuItemId === 'web-tldr-summarize-link' && info.linkUrl) {
+            await launchSummarization(info.linkUrl, tab);
+        } else if (info.menuItemId === 'web-tldr-summarize-page') {
+            const targetUrl = info.pageUrl || tab?.url;
+            await launchSummarization(targetUrl, tab);
+        }
+    } catch (e) {
+        console.error('[Web TL;DR] Context menu action failed', e);
     }
 });

@@ -1,12 +1,13 @@
 {
   "manifest_version": 3,
   "name": "Web TL;DR for NotebookLM - Page Summary",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Import the current webpage into NotebookLM and automatically get a TL;DR summary",
   "permissions": [
     "activeTab",
     "scripting",
-    "storage"
+    "storage",
+    "contextMenus"
   ],
   "background": {
     "service_worker": "background.js"
