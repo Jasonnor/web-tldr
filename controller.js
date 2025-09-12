@@ -325,11 +325,15 @@ async function importAndSummarizeWebpage() {
     showOverlay();
     showToast("Web TL;DR: Starting summarization process...");
 
-    const data = await chrome.storage.local.get('urlToSummarize');
-    const url = data.urlToSummarize;
+    // Prefer URL passed via injected variable to avoid race conditions; fall back to storage for backward compatibility
+    let url = typeof window !== 'undefined' ? window.__web_tldr_url : undefined;
+    if (!url) {
+        const data = await chrome.storage.local.get('urlToSummarize');
+        url = data.urlToSummarize;
+    }
 
     if (!url) {
-        console.error("URL not found in storage. Aborting.");
+        console.error("URL not found for summarization. Aborting.");
         updateToast("Error: URL not found. Please try again.");
         removeToast(5000);
         removeOverlay();
@@ -358,7 +362,15 @@ async function importAndSummarizeWebpage() {
         const importButton = await waitForElement('button:not([disabled]).submit-button');
         importButton.closest('button').click();
 
-        await chrome.storage.local.remove('urlToSummarize');
+        // Clean up a legacy storage key only if it matches our URL (backward compatibility)
+        try {
+            const existing = await chrome.storage.local.get('urlToSummarize');
+            if (existing && existing.urlToSummarize === url) {
+                await chrome.storage.local.remove('urlToSummarize');
+            }
+        } catch (_) {
+            /* ignore */
+        }
         updateToast("Web TL;DR: Waiting for page to load...");
 
         const promptTextarea = await waitForElement('textarea.query-box-input');
@@ -366,7 +378,7 @@ async function importAndSummarizeWebpage() {
         // Only run if the textarea is empty to avoid issues on reloads
         if (promptTextarea.value === "") {
             // Get the prompt text from settings, default to "TL;DR" if not set
-            const promptData = await chrome.storage.local.get({ promptText: 'TL;DR' });
+            const promptData = await chrome.storage.local.get({promptText: 'TL;DR'});
             const promptText = promptData.promptText;
 
             updateToast(`Web TL;DR: Entering "${promptText}" prompt...`);

@@ -1,6 +1,6 @@
 chrome.action.onClicked.addListener(async (tab) => {
     try {
-        // Get and store the URL
+        // Get the URL to summarize for this invocation
         const urlToSummarize = tab.url;
         if (!urlToSummarize || urlToSummarize.startsWith('chrome://')) {
             console.error("Invalid URL for summarization.");
@@ -19,6 +19,15 @@ chrome.action.onClicked.addListener(async (tab) => {
                 changeInfo.status === 'complete' &&
                 tab.url.startsWith('https://notebooklm.google.com')
             ) {
+                // Inject the URL into the tab's isolated world to avoid race conditions
+                chrome.scripting.executeScript({
+                    target: {tabId: tabId},
+                    func: (u) => {
+                        window.__web_tldr_url = u;
+                    },
+                    args: [urlToSummarize]
+                });
+
                 // Inject the controller script
                 chrome.scripting.executeScript({
                     target: {tabId: tabId},
