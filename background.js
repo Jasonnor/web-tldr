@@ -8,8 +8,13 @@ chrome.action.onClicked.addListener(async (tab) => {
         }
         await chrome.storage.local.set({'urlToSummarize': urlToSummarize});
 
-        // Open NotebookLM in a new tab
-        const notebookTab = await chrome.tabs.create({url: "https://notebooklm.google.com/"});
+        // Open NotebookLM in a new tab, immediately to the right of the current tab
+        const notebookTab = await chrome.tabs.create({
+            url: "https://notebooklm.google.com/",
+            index: tab.index + 1,
+            windowId: tab.windowId,
+            openerTabId: tab.id
+        });
 
         // Set up a listener to wait for the tab to finish loading
         const listener = (tabId, changeInfo, tab) => {
