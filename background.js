@@ -28,10 +28,11 @@ async function launchSummarization(urlToSummarize, sourceTab) {
                 // Inject the URL into the tab's isolated world to avoid race conditions
                 chrome.scripting.executeScript({
                     target: {tabId: tabId},
-                    func: (u) => {
+                    func: (u, t) => {
                         window.__web_tldr_url = u;
+                        window.__web_tldr_source_title = t;
                     },
-                    args: [urlToSummarize]
+                    args: [urlToSummarize, sourceTab?.title || null]
                 });
 
                 // Inject the controller script

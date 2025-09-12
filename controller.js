@@ -105,10 +105,10 @@ function showToast(message, iconType = 'spinner') {
         toastElement.appendChild(icon);
     }
 
-    // Add message to toast
+    // Add a message to toast
     toastElement.appendChild(messageElement);
 
-    // Add toast to body
+    // Add toast to the body
     document.body.appendChild(toastElement);
 
     // Fade in the toast
@@ -320,17 +320,57 @@ function waitForElement(selector, timeout = 10000) {
     });
 }
 
-async function importAndSummarizeWebpage() {
-    // Show overlay and initial toast
-    showOverlay();
-    showToast("Web TL;DR: Starting summarization process...");
+// --- Title management for better tab readability ---
+let __webTldrOriginalTitle = document.title;
+let __webTldrSourceTitle = null;
 
+function getReadableSourceTitle(url, injectedTitle) {
+    if (injectedTitle && injectedTitle.trim()) return injectedTitle.trim();
+    try {
+        const u = new URL(url);
+        // Use pathname hint if available
+        const path = u.pathname && u.pathname !== '/' ? decodeURIComponent(u.pathname).split('/').filter(Boolean).slice(-1)[0] : '';
+        const host = u.hostname.replace(/^www\./, '');
+        const guess = path ? `${host} • ${path}` : host;
+        return guess;
+    } catch (_) {
+        return url;
+    }
+}
+
+function setNotebookTitle(status) {
+    // status: 'loading' | 'importing' | 'generating' | 'success' | 'error'
+    const emojis = {
+        loading: '⏳',
+        importing: '⏳',
+        generating: '✨',
+        success: '✅',
+        error: '⚠️'
+    };
+    const emoji = emojis[status] || '';
+    const source = __webTldrSourceTitle || 'Page';
+    // Keep the NotebookLM brand last so multiple tabs group nicely by source
+    document.title = `${emoji} ${source} – NotebookLM`;
+}
+
+async function importAndSummarizeWebpage() {
     // Prefer URL passed via injected variable to avoid race conditions; fall back to storage for backward compatibility
     let url = typeof window !== 'undefined' ? window.__web_tldr_url : undefined;
     if (!url) {
-        const data = await chrome.storage.local.get('urlToSummarize');
-        url = data.urlToSummarize;
+        try {
+            const data = await chrome.storage.local.get('urlToSummarize');
+            url = data.urlToSummarize;
+        } catch (_) {
+            /* ignore */
+        }
     }
+    // Compute source title as early as possible
+    __webTldrSourceTitle = getReadableSourceTitle(url || location.href, typeof window !== 'undefined' ? window.__web_tldr_source_title : null);
+
+    // Show overlay and initial toast
+    showOverlay();
+    showToast("Web TL;DR: Starting summarization process...");
+    setNotebookTitle('loading');
 
     if (!url) {
         console.error("URL not found for summarization. Aborting.");
@@ -358,6 +398,7 @@ async function importAndSummarizeWebpage() {
         urlInput.value = url;
         urlInput.dispatchEvent(new Event('input', {bubbles: true}));
         updateToast("Web TL;DR: Importing webpage...");
+        setNotebookTitle('importing');
 
         const importButton = await waitForElement('button:not([disabled]).submit-button');
         importButton.closest('button').click();
@@ -393,6 +434,7 @@ async function importAndSummarizeWebpage() {
 
             // Click the submitting button repeatedly until the textarea is empty
             updateToast("Web TL;DR: Generating summary...");
+            setNotebookTitle('generating');
             const maxAttempts = 20;
             let attempts = 0;
 
@@ -406,16 +448,19 @@ async function importAndSummarizeWebpage() {
             }
 
             updateToast("Web TL;DR: Summary generated successfully!");
+            setNotebookTitle('success');
             removeToast(2000);
             removeOverlay();
         } else {
             updateToast("Web TL;DR: Page imported successfully!");
+            setNotebookTitle('success');
             removeToast(2000);
             removeOverlay();
         }
     } catch (error) {
         console.error("[Web TL;DR for NotebookLM - controller] An error occurred:", error);
         updateToast(`Web TL;DR: An error occurred. Please try again.`);
+        setNotebookTitle('error');
         removeToast(5000);
         removeOverlay();
     }
