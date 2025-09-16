@@ -4,6 +4,23 @@
  * and doesn't rely on NotebookLM's DOM structure.
  */
 
+// i18n helper
+function i18n(key, subs, fallback = '') {
+    try {
+        const msg = chrome?.i18n?.getMessage?.(key, subs);
+        return msg && msg.trim() ? msg : (fallback || '');
+    } catch (_) {
+        return fallback || '';
+    }
+}
+
+// Helper for toast messages to prepend brand prefix consistently
+function toastI18n(key, subs, fallback = '') {
+    const prefix = i18n('brandPrefix', null, 'Web TL;DR:');
+    const body = i18n(key, subs, fallback);
+    return `${prefix} ${body}`.trim();
+}
+
 // Toast and overlay management
 let toastElement = null;
 let overlayElement = null;
@@ -43,7 +60,7 @@ function showToast(message, iconType = 'spinner') {
         opacity: '0'
     });
 
-    // Create message element
+    // Create a message element
     const messageElement = document.createElement('span');
     messageElement.textContent = message;
 
@@ -53,7 +70,7 @@ function showToast(message, iconType = 'spinner') {
         const icon = document.createElement('div');
         icon.className = `web-tldr-${iconType}`;
 
-        // Add styles based on icon type
+        // Add styles based on an icon type
         if (iconType === 'spinner') {
             Object.assign(icon.style, {
                 width: '16px',
@@ -223,7 +240,7 @@ function removeToastNow() {
  * Creates and shows a full-page overlay
  */
 function showOverlay() {
-    // Remove existing overlay if present
+    // Remove the existing overlay if present
     if (overlayElement?.parentNode) {
         overlayElement.parentNode.removeChild(overlayElement);
     }
@@ -348,9 +365,10 @@ function setNotebookTitle(status) {
         error: '⚠️'
     };
     const emoji = emojis[status] || '';
-    const source = __webTldrSourceTitle || 'Page';
+    const source = __webTldrSourceTitle || i18n('titleSourceFallback', null, 'Page');
     // Keep the NotebookLM brand last so multiple tabs group nicely by source
-    document.title = `${emoji} ${source} – NotebookLM`;
+    const brand = i18n('brandNotebookLM', null, 'NotebookLM');
+    document.title = `${emoji} ${source} – ${brand}`;
 }
 
 async function importAndSummarizeWebpage() {
@@ -369,35 +387,35 @@ async function importAndSummarizeWebpage() {
 
     // Show overlay and initial toast
     showOverlay();
-    showToast("Web TL;DR: Starting summarization process...");
+    showToast(toastI18n('toastStarting', null, 'Starting summarization process...'));
     setNotebookTitle('loading');
 
     if (!url) {
         console.error("URL not found for summarization. Aborting.");
-        updateToast("Error: URL not found. Please try again.");
+        updateToast(i18n('errorUrlNotFound', null, 'Error: URL not found. Please try again.'));
         removeToast(5000);
         removeOverlay();
         return;
     }
 
     try {
-        updateToast("Web TL;DR: Opening Add Source menu...");
+        updateToast(toastI18n('toastOpeningAddSource', null, 'Opening Add Source menu...'));
 
         // Click the "+ Add Source" button
         const addSourceButton = await waitForElement('button:not([disabled]).create-new-button');
         addSourceButton.click();
-        updateToast("Web TL;DR: Selecting Website option...");
+        updateToast(toastI18n('toastSelectingWebsite', null, 'Selecting Website option...'));
 
         // Click the "Website" option from the menu
         const websiteOption = await waitForElement('#mat-mdc-chip-2');
         websiteOption.click();
-        updateToast(`Web TL;DR: Adding URL: ${url.substring(0, 30)}${url.length > 30 ? '...' : ''}`);
+        updateToast(toastI18n('toastAddingUrl', [`${url.substring(0, 30)}${url.length > 30 ? '...' : ''}`], `Adding URL: ${url.substring(0, 30)}${url.length > 30 ? '...' : ''}`));
 
         // Find the input, paste the URL, and click import
         const urlInput = await waitForElement('textarea[formcontrolname="newUrl"]');
         urlInput.value = url;
         urlInput.dispatchEvent(new Event('input', {bubbles: true}));
-        updateToast("Web TL;DR: Importing webpage...");
+        updateToast(toastI18n('toastImporting', null, 'Importing webpage...'));
         setNotebookTitle('importing');
 
         const importButton = await waitForElement('button:not([disabled]).submit-button');
@@ -412,17 +430,17 @@ async function importAndSummarizeWebpage() {
         } catch (_) {
             /* ignore */
         }
-        updateToast("Web TL;DR: Waiting for page to load...");
+        updateToast(toastI18n('toastWaitingLoad', null, 'Waiting for page to load...'));
 
         const promptTextarea = await waitForElement('textarea.query-box-input');
 
         // Only run if the textarea is empty to avoid issues on reloads
         if (promptTextarea.value === "") {
             // Get the prompt text from settings, default to "TL;DR" if not set
-            const promptData = await chrome.storage.local.get({promptText: 'TL;DR'});
+            const promptData = await chrome.storage.local.get({promptText: i18n('promptDefault', null, 'TL;DR')});
             const promptText = promptData.promptText;
 
-            updateToast(`Web TL;DR: Entering "${promptText}" prompt...`);
+            updateToast(toastI18n('toastEnteringPrompt', [promptText], `Entering "${promptText}" prompt...`));
             promptTextarea.value = promptText;
             promptTextarea.dispatchEvent(new Event('input', {bubbles: true}));
 
@@ -433,7 +451,7 @@ async function importAndSummarizeWebpage() {
             await new Promise(resolve => setTimeout(resolve, 3000));
 
             // Click the submitting button repeatedly until the textarea is empty
-            updateToast("Web TL;DR: Generating summary...");
+            updateToast(toastI18n('toastGenerating', null, 'Generating summary...'));
             setNotebookTitle('generating');
             const maxAttempts = 20;
             let attempts = 0;
@@ -447,19 +465,19 @@ async function importAndSummarizeWebpage() {
                 await new Promise(resolve => setTimeout(resolve, 500));
             }
 
-            updateToast("Web TL;DR: Summary generated successfully!");
+            updateToast(toastI18n('toastSummarySuccess', null, 'Summary generated successfully!'));
             setNotebookTitle('success');
             removeToast(2000);
             removeOverlay();
         } else {
-            updateToast("Web TL;DR: Page imported successfully!");
+            updateToast(toastI18n('toastImportSuccess', null, 'Page imported successfully!'));
             setNotebookTitle('success');
             removeToast(2000);
             removeOverlay();
         }
     } catch (error) {
         console.error("[Web TL;DR for NotebookLM - controller] An error occurred:", error);
-        updateToast(`Web TL;DR: An error occurred. Please try again.`);
+        updateToast(toastI18n('toastGenericError', null, 'An error occurred. Please try again.'));
         setNotebookTitle('error');
         removeToast(5000);
         removeOverlay();

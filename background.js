@@ -6,7 +6,7 @@ async function launchSummarization(urlToSummarize, sourceTab) {
         }
         await chrome.storage.local.set({'urlToSummarize': urlToSummarize});
 
-        // Read user preference for opening in background (default: false)
+        // Read user preference for opening in the background (default: false)
         const {openInBackground = false} = await chrome.storage.local.get({openInBackground: false});
 
         // Open NotebookLM in a new tab, immediately to the right of the current tab
@@ -64,13 +64,13 @@ chrome.runtime.onInstalled.addListener(() => {
             // Summarize this page
             chrome.contextMenus.create({
                 id: 'web-tldr-summarize-page',
-                title: 'Summarize this page with NotebookLM',
+                title: chrome.i18n.getMessage('ctxSummarizePage') || 'Summarize this page with NotebookLM',
                 contexts: ['page']
             });
             // Summarize link target
             chrome.contextMenus.create({
                 id: 'web-tldr-summarize-link',
-                title: 'Summarize linked page with NotebookLM',
+                title: chrome.i18n.getMessage('ctxSummarizeLink') || 'Summarize linked page with NotebookLM',
                 contexts: ['link']
             });
         });

@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "Web TL;DR for NotebookLM - Page Summary",
-  "version": "1.1.0",
-  "description": "Import the current webpage into NotebookLM and automatically get a TL;DR summary",
+  "name": "__MSG_extName__",
+  "default_locale": "en",
+  "version": "1.2.0",
+  "description": "__MSG_extDescription__",
   "permissions": [
     "activeTab",
     "scripting",
@@ -13,7 +14,7 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_title": "Summarize with NotebookLM"
+    "default_title": "__MSG_actionTitle__"
   },
   "options_ui": {
     "page": "options.html",
