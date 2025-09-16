@@ -496,6 +496,9 @@ async function importAndSummarizeWebpage() {
             // Wait until the notebook title changes from the initial value instead of a fixed sleep
             await waitForNotebookTitleChange(initialNotebookTitle, 15000);
 
+            // The new title is the source title, so grab it for the tab title
+            __webTldrSourceTitle = document.querySelector('h1.notebook-title')?.textContent;
+
             // Click the submitting button repeatedly until the textarea is empty
             updateToast(toastI18n('toastGenerating', null, 'Generating summary...'));
             setNotebookTitle('generating');
