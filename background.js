@@ -1,4 +1,4 @@
-async function launchSummarization(urlToSummarize, sourceTab) {
+async function launchSummarization(urlToSummarize, sourceTab, linkText = null) {
     try {
         if (!urlToSummarize || urlToSummarize.startsWith('chrome://')) {
             console.error("Invalid URL for summarization.");
@@ -28,11 +28,11 @@ async function launchSummarization(urlToSummarize, sourceTab) {
                 // Inject the URL into the tab's isolated world to avoid race conditions
                 chrome.scripting.executeScript({
                     target: {tabId: tabId},
-                    func: (u, t) => {
+                    func: (u, t, lt) => {
                         window.__web_tldr_url = u;
-                        window.__web_tldr_source_title = t;
+                        window.__web_tldr_source_title = lt || t;
                     },
-                    args: [urlToSummarize, sourceTab?.title || null]
+                    args: [urlToSummarize, sourceTab?.title || null, linkText]
                 });
 
                 // Inject the controller script
@@ -83,7 +83,7 @@ chrome.runtime.onInstalled.addListener(() => {
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     try {
         if (info.menuItemId === 'web-tldr-summarize-link' && info.linkUrl) {
-            await launchSummarization(info.linkUrl, tab);
+            await launchSummarization(info.linkUrl, tab, info.selectionText);
         } else if (info.menuItemId === 'web-tldr-summarize-page') {
             const targetUrl = info.pageUrl || tab?.url;
             await launchSummarization(targetUrl, tab);
