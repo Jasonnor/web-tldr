@@ -337,6 +337,48 @@ function waitForElement(selector, timeout = 10000) {
     });
 }
 
+/**
+ * Wait until the Notebook title (h1.notebook-title) changes from a given initial value.
+ * Falls back to timeout if it doesn't change in time.
+ * @param {string|null} initialTitle The initial title textContent to compare against.
+ * @param {number} timeout Milliseconds to wait before giving up.
+ */
+function waitForNotebookTitleChange(initialTitle, timeout = 10000) {
+    return new Promise((resolve) => {
+        const finish = () => resolve();
+
+        // If we don't have an initial title, just resolve after a short tick to avoid blocking
+        if (typeof initialTitle !== 'string') {
+            return setTimeout(finish, 0);
+        }
+
+        const titleElement = document.querySelector('h1.notebook-title');
+        // If already changed, resolve immediately
+        if (titleElement && titleElement.textContent !== initialTitle) {
+            return finish();
+        }
+
+        let timeoutId = setTimeout(() => {
+            observer.disconnect();
+            finish(); // Give up but continue
+        }, timeout);
+
+        const observer = new MutationObserver(() => {
+            const titleElement = document.querySelector('h1.notebook-title');
+            if (!titleElement) return;
+            const current = titleElement.textContent;
+            if (current !== initialTitle) {
+                clearTimeout(timeoutId);
+                observer.disconnect();
+                finish();
+            }
+        });
+
+        // Observe changes in the subtree where the title might live
+        observer.observe(document.body, {childList: true, subtree: true, characterData: true});
+    });
+}
+
 // --- Title management for better tab readability ---
 let __webTldrOriginalTitle = document.title;
 let __webTldrSourceTitle = null;
@@ -436,6 +478,10 @@ async function importAndSummarizeWebpage() {
 
         // Only run if the textarea is empty to avoid issues on reloads
         if (promptTextarea.value === "") {
+            // Capture the initial notebook title using waitForElement to ensure existence
+            const titleElement = await waitForElement('h1.notebook-title', 10000);
+            const initialNotebookTitle = titleElement?.textContent ?? null;
+
             // Get the prompt text from settings, default to "TL;DR" if not set
             const promptData = await chrome.storage.local.get({promptText: i18n('promptDefault', null, 'TL;DR')});
             const promptText = promptData.promptText;
@@ -447,8 +493,8 @@ async function importAndSummarizeWebpage() {
             // Wait for the submitting button to become enabled
             let submitButton = await waitForElement('button:not([disabled]).submit-button');
 
-            // Brief pause to ensure the UI thread is ready
-            await new Promise(resolve => setTimeout(resolve, 3000));
+            // Wait until the notebook title changes from the initial value instead of a fixed sleep
+            await waitForNotebookTitleChange(initialNotebookTitle, 15000);
 
             // Click the submitting button repeatedly until the textarea is empty
             updateToast(toastI18n('toastGenerating', null, 'Generating summary...'));
