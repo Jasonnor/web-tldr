@@ -407,7 +407,7 @@ async function importAndSummarizeWebpage() {
         updateToast(toastI18n('toastSelectingWebsite', null, 'Selecting Website option...'));
 
         // Click the "Website" option from the menu
-        const websiteOption = await waitForElement('#mat-mdc-chip-2');
+        const websiteOption = await waitForElement('#mat-mdc-chip-1');
         websiteOption.click();
         updateToast(toastI18n('toastAddingUrl', [`${url.substring(0, 30)}${url.length > 30 ? '...' : ''}`], `Adding URL: ${url.substring(0, 30)}${url.length > 30 ? '...' : ''}`));
 
