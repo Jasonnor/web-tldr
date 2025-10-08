@@ -73,6 +73,12 @@ chrome.runtime.onInstalled.addListener(() => {
                 title: chrome.i18n.getMessage('ctxSummarizeLink') || 'Summarize linked page with NotebookLM',
                 contexts: ['link']
             });
+            // Summarize selected text
+            chrome.contextMenus.create({
+                id: 'web-tldr-summarize-selection',
+                title: chrome.i18n.getMessage('ctxSummarizeSelection') || 'Summarize selected text with NotebookLM',
+                contexts: ['selection']
+            });
         });
     } catch (e) {
         console.error('[Web TL;DR] Failed to create context menus', e);
@@ -87,6 +93,17 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
         } else if (info.menuItemId === 'web-tldr-summarize-page') {
             const targetUrl = info.pageUrl || tab?.url;
             await launchSummarization(targetUrl, tab);
+        } else if (info.menuItemId === 'web-tldr-summarize-selection' && info.selectionText) {
+            // Store the selected text so the controller can add it as a Text source
+            const snippet = info.selectionText.trim();
+            if (snippet) {
+                await chrome.storage.local.set({
+                    selectedTextToSummarize: snippet,
+                    selectedTextSourceTitle: snippet.length > 80 ? snippet.slice(0, 77) + '…' : snippet
+                });
+                const targetUrl = info.pageUrl || tab?.url;
+                await launchSummarization(targetUrl, tab, snippet);
+            }
         }
     } catch (e) {
         console.error('[Web TL;DR] Context menu action failed', e);

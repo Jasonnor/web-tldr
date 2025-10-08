@@ -413,6 +413,109 @@ function setNotebookTitle(status) {
     document.title = `${emoji} ${source} – ${brand}`;
 }
 
+// Shared post-import flow for both URL and Text sources
+async function handlePromptAndGenerate() {
+    updateToast(toastI18n('toastWaitingLoad', null, 'Waiting for page to load...'));
+
+    const promptTextarea = await waitForElement('textarea.query-box-input');
+
+    // Only run if the textarea is empty to avoid issues on reloads
+    if (promptTextarea.value === '') {
+        // Capture the initial notebook title using waitForElement to ensure existence
+        const titleElement = await waitForElement('h1.notebook-title', 10000);
+        const initialNotebookTitle = titleElement?.textContent ?? null;
+
+        // Get the prompt text from settings, default to "TL;DR" if not set
+        const promptData = await chrome.storage.local.get({promptText: i18n('promptDefault', null, 'TL;DR')});
+        const promptText = promptData.promptText;
+
+        updateToast(toastI18n('toastEnteringPrompt', [promptText], `Entering "${promptText}" prompt...`));
+        promptTextarea.value = promptText;
+        promptTextarea.dispatchEvent(new Event('input', {bubbles: true}));
+
+        // Wait for the submitting button to become enabled
+        let submitButton = await waitForElement('button:not([disabled]).submit-button');
+
+        // Wait until the notebook title changes from the initial value instead of a fixed sleep
+        await waitForNotebookTitleChange(initialNotebookTitle, 15000);
+
+        // The new title is the source title, so grab it for the tab title
+        __webTldrSourceTitle = document.querySelector('h1.notebook-title')?.textContent || __webTldrSourceTitle;
+
+        // Click the submitting button repeatedly until the textarea is empty
+        updateToast(toastI18n('toastGenerating', null, 'Generating summary...'));
+        setNotebookTitle('generating');
+        const maxAttempts = 20;
+        let attempts = 0;
+
+        while (promptTextarea.value !== '' && attempts < maxAttempts) {
+            submitButton = await waitForElement('button:not([disabled]).submit-button');
+            submitButton.click();
+            attempts++;
+
+            // Wait for the UI to update
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+
+        updateToast(toastI18n('toastSummarySuccess', null, 'Summary generated successfully!'));
+        setNotebookTitle('success');
+        removeToast(2000);
+        removeOverlay();
+    } else {
+        updateToast(toastI18n('toastImportSuccess', null, 'Page imported successfully!'));
+        setNotebookTitle('success');
+        removeToast(2000);
+        removeOverlay();
+    }
+}
+
+async function importAndSummarizeSelectedText(selectedText, injectedTitle) {
+    // Compute source title from snippet
+    const snippet = (selectedText || '').trim();
+    __webTldrSourceTitle = injectedTitle && injectedTitle.trim() ? injectedTitle.trim() : (snippet.length > 80 ? snippet.slice(0, 77) + '…' : snippet) || i18n('titleSourceFallback', null, 'Page');
+
+    showOverlay();
+    showToast(toastI18n('toastStarting', null, 'Starting summarization process...'));
+    setNotebookTitle('loading');
+
+    try {
+        updateToast(toastI18n('toastOpeningAddSource', null, 'Opening Add Source menu...'));
+        const addSourceButton = await waitForElement('button:not([disabled]).create-new-button');
+        addSourceButton.click();
+
+        // Click the "Website" option from the menu
+
+        // Try to select the "Text" option
+        updateToast(toastI18n('toastSelectingText', null, 'Selecting Text option...'));
+        const textOption = await waitForElement('#mat-mdc-chip-3');
+        textOption.click();
+
+        updateToast(toastI18n('toastAddingText', [snippet.length > 30 ? snippet.slice(0, 27) + '…' : snippet], 'Adding selected text...'));
+        const textInput = await waitForElement('textarea#mat-input-0');
+        if (!textInput) throw new Error('Text input not found');
+        textInput.value = selectedText;
+        textInput.dispatchEvent(new Event('input', {bubbles: true}));
+
+        setNotebookTitle('importing');
+        const importButton = await waitForElement('button:not([disabled]).mat-primary.mat-mdc-unelevated-button');
+        importButton.closest('button').click();
+
+        // Clear storage keys if present
+        try {
+            await chrome.storage.local.remove(['selectedTextToSummarize', 'selectedTextSourceTitle']);
+        } catch (_) { /* ignore */
+        }
+
+        await handlePromptAndGenerate();
+    } catch (error) {
+        console.error('[Web TL;DR for NotebookLM - controller] Text flow error:', error);
+        updateToast(toastI18n('toastGenericError', null, 'An error occurred. Please try again.'));
+        setNotebookTitle('error');
+        removeToast(5000);
+        removeOverlay();
+    }
+}
+
 async function importAndSummarizeWebpage() {
     // Prefer URL passed via injected variable to avoid race conditions; fall back to storage for backward compatibility
     let url = typeof window !== 'undefined' ? window.__web_tldr_url : undefined;
@@ -472,58 +575,7 @@ async function importAndSummarizeWebpage() {
         } catch (_) {
             /* ignore */
         }
-        updateToast(toastI18n('toastWaitingLoad', null, 'Waiting for page to load...'));
-
-        const promptTextarea = await waitForElement('textarea.query-box-input');
-
-        // Only run if the textarea is empty to avoid issues on reloads
-        if (promptTextarea.value === "") {
-            // Capture the initial notebook title using waitForElement to ensure existence
-            const titleElement = await waitForElement('h1.notebook-title', 10000);
-            const initialNotebookTitle = titleElement?.textContent ?? null;
-
-            // Get the prompt text from settings, default to "TL;DR" if not set
-            const promptData = await chrome.storage.local.get({promptText: i18n('promptDefault', null, 'TL;DR')});
-            const promptText = promptData.promptText;
-
-            updateToast(toastI18n('toastEnteringPrompt', [promptText], `Entering "${promptText}" prompt...`));
-            promptTextarea.value = promptText;
-            promptTextarea.dispatchEvent(new Event('input', {bubbles: true}));
-
-            // Wait for the submitting button to become enabled
-            let submitButton = await waitForElement('button:not([disabled]).submit-button');
-
-            // Wait until the notebook title changes from the initial value instead of a fixed sleep
-            await waitForNotebookTitleChange(initialNotebookTitle, 15000);
-
-            // The new title is the source title, so grab it for the tab title
-            __webTldrSourceTitle = document.querySelector('h1.notebook-title')?.textContent;
-
-            // Click the submitting button repeatedly until the textarea is empty
-            updateToast(toastI18n('toastGenerating', null, 'Generating summary...'));
-            setNotebookTitle('generating');
-            const maxAttempts = 20;
-            let attempts = 0;
-
-            while (promptTextarea.value !== "" && attempts < maxAttempts) {
-                submitButton = await waitForElement('button:not([disabled]).submit-button');
-                submitButton.click();
-                attempts++;
-
-                // Wait for the UI to update
-                await new Promise(resolve => setTimeout(resolve, 500));
-            }
-
-            updateToast(toastI18n('toastSummarySuccess', null, 'Summary generated successfully!'));
-            setNotebookTitle('success');
-            removeToast(2000);
-            removeOverlay();
-        } else {
-            updateToast(toastI18n('toastImportSuccess', null, 'Page imported successfully!'));
-            setNotebookTitle('success');
-            removeToast(2000);
-            removeOverlay();
-        }
+        await handlePromptAndGenerate();
     } catch (error) {
         console.error("[Web TL;DR for NotebookLM - controller] An error occurred:", error);
         updateToast(toastI18n('toastGenericError', null, 'An error occurred. Please try again.'));
@@ -533,4 +585,22 @@ async function importAndSummarizeWebpage() {
     }
 }
 
-setTimeout(importAndSummarizeWebpage, 0);
+async function __webTldrStart() {
+    try {
+        const {
+            selectedTextToSummarize = null,
+            selectedTextSourceTitle = null
+        } = await chrome.storage.local.get({selectedTextToSummarize: null, selectedTextSourceTitle: null});
+        if (selectedTextToSummarize && selectedTextToSummarize.trim()) {
+            const injectedTitle = typeof window !== 'undefined' ? (window.__web_tldr_source_title || selectedTextSourceTitle) : selectedTextSourceTitle;
+            await importAndSummarizeSelectedText(selectedTextToSummarize, injectedTitle);
+        } else {
+            await importAndSummarizeWebpage();
+        }
+    } catch (e) {
+        console.error('[Web TL;DR for NotebookLM - controller] Start failed, falling back to URL flow', e);
+        await importAndSummarizeWebpage();
+    }
+}
+
+setTimeout(__webTldrStart, 0);
