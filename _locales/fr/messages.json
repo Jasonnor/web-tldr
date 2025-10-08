@@ -28,5 +28,8 @@
   "toastImportSuccess": {"message": "Page importée avec succès !"},
   "toastGenericError": {"message": "Une erreur s'est produite. Veuillez réessayer."},
   "titleSourceFallback": {"message": "Page"},
-  "brandNotebookLM": {"message": "NotebookLM"}
+  "brandNotebookLM": {"message": "NotebookLM"},
+  "ctxSummarizeSelection": {"message": "Résumer le texte sélectionné avec NotebookLM"},
+  "toastSelectingText": {"message": "Sélection de l’option Texte…"},
+  "toastAddingText": {"message": "Ajout du texte sélectionné : $TEXT$", "placeholders": {"text": {"content": "$1"}}}
 }

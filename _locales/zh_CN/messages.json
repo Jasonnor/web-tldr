@@ -28,5 +28,8 @@
   "toastImportSuccess": {"message": "页面导入成功！"},
   "toastGenericError": {"message": "发生错误。请重试。"},
   "titleSourceFallback": {"message": "页面"},
-  "brandNotebookLM": {"message": "NotebookLM"}
+  "brandNotebookLM": {"message": "NotebookLM"},
+  "ctxSummarizeSelection": {"message": "使用 NotebookLM 摘要所选文本"},
+  "toastSelectingText": {"message": "正在选择“文本”选项..."},
+  "toastAddingText": {"message": "正在添加所选文本：$TEXT$", "placeholders": {"text": {"content": "$1"}}}
 }

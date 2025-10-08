@@ -28,5 +28,8 @@
   "toastImportSuccess": {"message": "ページを正常にインポートしました！"},
   "toastGenericError": {"message": "エラーが発生しました。もう一度お試しください。"},
   "titleSourceFallback": {"message": "ページ"},
-  "brandNotebookLM": {"message": "NotebookLM"}
+  "brandNotebookLM": {"message": "NotebookLM"},
+  "ctxSummarizeSelection": {"message": "選択したテキストを NotebookLM で要約"},
+  "toastSelectingText": {"message": "「テキスト」オプションを選択しています..."},
+  "toastAddingText": {"message": "選択したテキストを追加中: $TEXT$", "placeholders": {"text": {"content": "$1"}}}
 }
