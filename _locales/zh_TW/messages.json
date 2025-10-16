@@ -3,7 +3,7 @@
   "extDescription": {"message": "將目前網頁匯入 NotebookLM，並自動取得 TL;DR 摘要"},
   "actionTitle": {"message": "使用 NotebookLM 進行摘要"},
   "ctxSummarizePage": {"message": "使用 NotebookLM 摘要此頁面"},
-  "ctxSummarizeLink": {"message": "使用 NotebookLM 摘要連結的頁面"},
+  "ctxSummarizeLinkOrSelection": {"message": "使用 NotebookLM 進行摘要"},
   "optionsTitle": {"message": "Web TL;DR 設定"},
   "optionsHeader": {"message": "Web TL;DR 設定"},
   "promptLabel": {"message": "摘要提示文字："},
@@ -29,7 +29,6 @@
   "toastGenericError": {"message": "發生錯誤。請再試一次。"},
   "titleSourceFallback": {"message": "頁面"},
   "brandNotebookLM": {"message": "NotebookLM"},
-  "ctxSummarizeSelection": {"message": "使用 NotebookLM 摘要所選文字"},
   "toastSelectingText": {"message": "正在選取「文字」選項..."},
   "toastAddingText": {"message": "正在新增所選文字：$TEXT$", "placeholders": {"text": {"content": "$1"}}}
 }

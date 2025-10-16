@@ -3,7 +3,7 @@
   "extDescription": {"message": "現在のウェブページを NotebookLM にインポートし、自動的に TL;DR 要約を取得します"},
   "actionTitle": {"message": "NotebookLM で要約"},
   "ctxSummarizePage": {"message": "このページを NotebookLM で要約"},
-  "ctxSummarizeLink": {"message": "リンク先のページを NotebookLM で要約"},
+  "ctxSummarizeLinkOrSelection": {"message": "NotebookLM で要約"},
   "optionsTitle": {"message": "Web TL;DR の設定"},
   "optionsHeader": {"message": "Web TL;DR の設定"},
   "promptLabel": {"message": "要約プロンプトのテキスト:"},
@@ -29,7 +29,6 @@
   "toastGenericError": {"message": "エラーが発生しました。もう一度お試しください。"},
   "titleSourceFallback": {"message": "ページ"},
   "brandNotebookLM": {"message": "NotebookLM"},
-  "ctxSummarizeSelection": {"message": "選択したテキストを NotebookLM で要約"},
   "toastSelectingText": {"message": "「テキスト」オプションを選択しています..."},
   "toastAddingText": {"message": "選択したテキストを追加中: $TEXT$", "placeholders": {"text": {"content": "$1"}}}
 }

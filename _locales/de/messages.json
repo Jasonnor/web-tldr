@@ -3,7 +3,7 @@
   "extDescription": {"message": "Importiert die aktuelle Webseite in NotebookLM und erstellt automatisch eine TL;DR-Zusammenfassung"},
   "actionTitle": {"message": "Mit NotebookLM zusammenfassen"},
   "ctxSummarizePage": {"message": "Diese Seite mit NotebookLM zusammenfassen"},
-  "ctxSummarizeLink": {"message": "Verlinkte Seite mit NotebookLM zusammenfassen"},
+  "ctxSummarizeLinkOrSelection": {"message": "Mit NotebookLM zusammenfassen"},
   "optionsTitle": {"message": "Web TL;DR Einstellungen"},
   "optionsHeader": {"message": "Web TL;DR Einstellungen"},
   "promptLabel": {"message": "Text des Zusammenfassungs-Prompts:"},
@@ -29,7 +29,6 @@
   "toastGenericError": {"message": "Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut."},
   "titleSourceFallback": {"message": "Seite"},
   "brandNotebookLM": {"message": "NotebookLM"},
-  "ctxSummarizeSelection": {"message": "Markierten Text mit NotebookLM zusammenfassen"},
   "toastSelectingText": {"message": "Option „Text“ wird ausgewählt…"},
   "toastAddingText": {"message": "Markierter Text wird hinzugefügt: $TEXT$", "placeholders": {"text": {"content": "$1"}}}
 }
