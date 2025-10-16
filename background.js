@@ -67,17 +67,11 @@ chrome.runtime.onInstalled.addListener(() => {
                 title: chrome.i18n.getMessage('ctxSummarizePage') || 'Summarize this page with NotebookLM',
                 contexts: ['page']
             });
-            // Summarize link target
+            // Summarize the link or selected text (combined)
             chrome.contextMenus.create({
-                id: 'web-tldr-summarize-link',
-                title: chrome.i18n.getMessage('ctxSummarizeLink') || 'Summarize linked page with NotebookLM',
-                contexts: ['link']
-            });
-            // Summarize selected text
-            chrome.contextMenus.create({
-                id: 'web-tldr-summarize-selection',
-                title: chrome.i18n.getMessage('ctxSummarizeSelection') || 'Summarize selected text with NotebookLM',
-                contexts: ['selection']
+                id: 'web-tldr-summarize-link-or-selection',
+                title: chrome.i18n.getMessage('ctxSummarizeLinkOrSelection') || 'Summarize with NotebookLM',
+                contexts: ['link', 'selection']
             });
         });
     } catch (e) {
@@ -88,21 +82,24 @@ chrome.runtime.onInstalled.addListener(() => {
 // Handle context menu clicks
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     try {
-        if (info.menuItemId === 'web-tldr-summarize-link' && info.linkUrl) {
-            await launchSummarization(info.linkUrl, tab, info.selectionText);
-        } else if (info.menuItemId === 'web-tldr-summarize-page') {
+        if (info.menuItemId === 'web-tldr-summarize-page') {
             const targetUrl = info.pageUrl || tab?.url;
             await launchSummarization(targetUrl, tab);
-        } else if (info.menuItemId === 'web-tldr-summarize-selection' && info.selectionText) {
-            // Store the selected text so the controller can add it as a Text source
-            const snippet = info.selectionText.trim();
-            if (snippet) {
-                await chrome.storage.local.set({
-                    selectedTextToSummarize: snippet,
-                    selectedTextSourceTitle: snippet.length > 80 ? snippet.slice(0, 77) + '…' : snippet
-                });
-                const targetUrl = info.pageUrl || tab?.url;
-                await launchSummarization(targetUrl, tab, snippet);
+        } else if (info.menuItemId === 'web-tldr-summarize-link-or-selection') {
+            // If a link is clicked, process the link first; otherwise, process selected text
+            if (info.linkUrl) {
+                await launchSummarization(info.linkUrl, tab, info.selectionText);
+            } else if (info.selectionText) {
+                // Store the selected text so the controller can add it as a Text source
+                const snippet = info.selectionText.trim();
+                if (snippet) {
+                    await chrome.storage.local.set({
+                        selectedTextToSummarize: snippet,
+                        selectedTextSourceTitle: snippet.length > 80 ? snippet.slice(0, 77) + '…' : snippet
+                    });
+                    const targetUrl = info.pageUrl || tab?.url;
+                    await launchSummarization(targetUrl, tab, snippet);
+                }
             }
         }
     } catch (e) {

@@ -3,7 +3,7 @@
   "extDescription": {"message": "将当前网页导入 NotebookLM，并自动获取 TL;DR 摘要"},
   "actionTitle": {"message": "使用 NotebookLM 进行摘要"},
   "ctxSummarizePage": {"message": "使用 NotebookLM 摘要此页面"},
-  "ctxSummarizeLink": {"message": "使用 NotebookLM 摘要链接的页面"},
+  "ctxSummarizeLinkOrSelection": {"message": "使用 NotebookLM 进行摘要"},
   "optionsTitle": {"message": "Web TL;DR 设置"},
   "optionsHeader": {"message": "Web TL;DR 设置"},
   "promptLabel": {"message": "摘要提示文本："},
@@ -29,7 +29,6 @@
   "toastGenericError": {"message": "发生错误。请重试。"},
   "titleSourceFallback": {"message": "页面"},
   "brandNotebookLM": {"message": "NotebookLM"},
-  "ctxSummarizeSelection": {"message": "使用 NotebookLM 摘要所选文本"},
   "toastSelectingText": {"message": "正在选择“文本”选项..."},
   "toastAddingText": {"message": "正在添加所选文本：$TEXT$", "placeholders": {"text": {"content": "$1"}}}
 }

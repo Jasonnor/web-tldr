@@ -3,7 +3,7 @@
   "extDescription": {"message": "Importez la page actuelle dans NotebookLM et obtenez automatiquement un résumé TL;DR"},
   "actionTitle": {"message": "Résumer avec NotebookLM"},
   "ctxSummarizePage": {"message": "Résumer cette page avec NotebookLM"},
-  "ctxSummarizeLink": {"message": "Résumer la page liée avec NotebookLM"},
+  "ctxSummarizeLinkOrSelection": {"message": "Résumer avec NotebookLM"},
   "optionsTitle": {"message": "Paramètres de Web TL;DR"},
   "optionsHeader": {"message": "Paramètres de Web TL;DR"},
   "promptLabel": {"message": "Texte de l'invite de résumé :"},
@@ -29,7 +29,6 @@
   "toastGenericError": {"message": "Une erreur s'est produite. Veuillez réessayer."},
   "titleSourceFallback": {"message": "Page"},
   "brandNotebookLM": {"message": "NotebookLM"},
-  "ctxSummarizeSelection": {"message": "Résumer le texte sélectionné avec NotebookLM"},
   "toastSelectingText": {"message": "Sélection de l’option Texte…"},
   "toastAddingText": {"message": "Ajout du texte sélectionné : $TEXT$", "placeholders": {"text": {"content": "$1"}}}
 }

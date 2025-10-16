@@ -3,7 +3,7 @@
   "extDescription": {"message": "Import the current webpage into NotebookLM and automatically get a TL;DR summary"},
   "actionTitle": {"message": "Summarize with NotebookLM"},
   "ctxSummarizePage": {"message": "Summarize this page with NotebookLM"},
-  "ctxSummarizeLink": {"message": "Summarize linked page with NotebookLM"},
+  "ctxSummarizeLinkOrSelection": {"message": "Summarize with NotebookLM"},
   "optionsTitle": {"message": "Web TL;DR Settings"},
   "optionsHeader": {"message": "Web TL;DR Settings"},
   "promptLabel": {"message": "Summary Prompt Text:"},
@@ -29,7 +29,6 @@
   "toastGenericError": {"message": "An error occurred. Please try again."},
   "titleSourceFallback": {"message": "Page"},
   "brandNotebookLM": {"message": "NotebookLM"},
-  "ctxSummarizeSelection": {"message": "Summarize selected text with NotebookLM"},
   "toastSelectingText": {"message": "Selecting Text option..."},
   "toastAddingText": {"message": "Adding selected text: $TEXT$", "placeholders": {"text": {"content": "$1"}}}
 }
