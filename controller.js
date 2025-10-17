@@ -457,6 +457,11 @@ async function handlePromptAndGenerate() {
             await new Promise(resolve => setTimeout(resolve, 500));
         }
 
+        // Wait for the loading indicator to appear and then disappear before announcing success
+        try {
+            await waitForAppearanceThenDisappearance('div > loading-component', 60000, 300000);
+        } catch (_) { /* ignore and proceed */ }
+
         updateToast(toastI18n('toastSummarySuccess', null, 'Summary generated successfully!'));
         setNotebookTitle('success');
         removeToast(2000);
@@ -604,3 +609,63 @@ async function __webTldrStart() {
 }
 
 setTimeout(__webTldrStart, 0);
+
+
+/**
+ * Wait for an element to first appear, then disappear.
+ * This helps avoid detecting the absence too early when the element will show briefly.
+ * @param {string} selector CSS selector of the element to observe
+ * @param {number} appearTimeout How long to wait for initial appearance (ms)
+ * @param {number} disappearTimeout How long to wait for a disappearance after it appears (ms)
+ * @returns {Promise<boolean>} true if full cycle observed, false on timeout but continues
+ */
+async function waitForAppearanceThenDisappearance(selector, appearTimeout = 60000, disappearTimeout = 300000) {
+    try {
+        // Wait for the element to appear at least once
+        const appeared = await waitForElement(selector, appearTimeout);
+        if (!appeared) {
+            console.log(`[Web TL;DR] waitForAppearanceThenDisappearance: '${selector}' did not appear within ${appearTimeout}ms. Proceeding.`);
+            return false;
+        }
+
+        // Once it has appeared, wait for it to disappear
+        if (!document.querySelector(selector)) {
+            // Already gone by the time we check
+            return true;
+        }
+
+        return await new Promise((resolve) => {
+            let resolved = false;
+            const resolveOnce = (val) => { if (!resolved) { resolved = true; resolve(val); } };
+
+            const observer = new MutationObserver(() => {
+                const exists = document.querySelector(selector);
+                if (!exists) {
+                    observer.disconnect();
+                    resolveOnce(true);
+                }
+            });
+
+            observer.observe(document.body, { childList: true, subtree: true, attributes: true, characterData: true });
+
+            const timeoutId = setTimeout(() => {
+                observer.disconnect();
+                console.log(`[Web TL;DR] waitForAppearanceThenDisappearance: '${selector}' did not disappear within ${disappearTimeout}ms. Proceeding.`);
+                resolveOnce(false);
+            }, disappearTimeout);
+
+            // Also, poll quickly in case the mutation doesn’t fire for removals outside the observed subtree (defensive)
+            const pollInterval = setInterval(() => {
+                if (!document.querySelector(selector)) {
+                    clearInterval(pollInterval);
+                    clearTimeout(timeoutId);
+                    observer.disconnect();
+                    resolveOnce(true);
+                }
+            }, 250);
+        });
+    } catch (e) {
+        console.warn('[Web TL;DR] waitForAppearanceThenDisappearance failed', e);
+        return false;
+    }
+}
