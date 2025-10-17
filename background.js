@@ -29,8 +29,8 @@ async function launchSummarization(urlToSummarize, sourceTab, linkText = null) {
                 chrome.scripting.executeScript({
                     target: {tabId: tabId},
                     func: (u, t, lt) => {
-                        window.__web_tldr_url = u;
-                        window.__web_tldr_source_title = lt || t;
+                        globalThis.__web_tldr_url = u;
+                        globalThis.__web_tldr_source_title = lt || t;
                     },
                     args: [urlToSummarize, sourceTab?.title || null, linkText]
                 });
@@ -62,17 +62,23 @@ chrome.runtime.onInstalled.addListener(() => {
     try {
         chrome.contextMenus.removeAll(() => {
             // Summarize this page
-            chrome.contextMenus.create({
-                id: 'web-tldr-summarize-page',
-                title: chrome.i18n.getMessage('ctxSummarizePage') || 'Summarize this page with NotebookLM',
-                contexts: ['page']
-            });
+            chrome.contextMenus.create(
+                /** @type {chrome.contextMenus.CreateProperties} */
+                {
+                    id: 'web-tldr-summarize-page',
+                    title: chrome.i18n.getMessage('ctxSummarizePage') || 'Summarize this page with NotebookLM',
+                    contexts: ['page']
+                }
+            );
             // Summarize the link or selected text (combined)
-            chrome.contextMenus.create({
-                id: 'web-tldr-summarize-link-or-selection',
-                title: chrome.i18n.getMessage('ctxSummarizeLinkOrSelection') || 'Summarize with NotebookLM',
-                contexts: ['link', 'selection']
-            });
+            chrome.contextMenus.create(
+                /** @type {chrome.contextMenus.CreateProperties} */
+                {
+                    id: 'web-tldr-summarize-link-or-selection',
+                    title: chrome.i18n.getMessage('ctxSummarizeLinkOrSelection') || 'Summarize with NotebookLM',
+                    contexts: ['link', 'selection']
+                }
+            );
         });
     } catch (e) {
         console.error('[Web TL;DR] Failed to create context menus', e);
