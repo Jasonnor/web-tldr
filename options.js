@@ -2,7 +2,8 @@
 function msg(key, subs) {
     try {
         return chrome.i18n.getMessage(key, subs) || '';
-    } catch (_) {
+    } catch (err) {
+        console.warn('i18n.getMessage failed', {key, subs, err});
         return '';
     }
 }
@@ -41,11 +42,16 @@ function localizeOptionsPage() {
 // Saves options to chrome.storage
 function saveOptions() {
     const defaultPrompt = msg('promptDefault') || 'TL;DR';
-    const promptText = document.getElementById('promptText').value || defaultPrompt;
-    const openInBackground = document.getElementById('openInBackground').checked || false;
+    /** @type {HTMLInputElement} */
+    const promptTextElement = document.getElementById('promptText');
+    const promptText = promptTextElement?.value || defaultPrompt;
+    /** @type {HTMLInputElement} */
+    const backgroundElement = document.getElementById('openInBackground');
+    const openInBackground = backgroundElement?.checked || false;
 
     chrome.storage.local.set({promptText: promptText, openInBackground: openInBackground}, function () {
         // Update status to let user know options were saved
+        /** @type {HTMLDivElement} */
         const status = document.getElementById('status');
         status.textContent = msg('settingsSaved') || 'Settings saved.';
         status.classList.add('success');

@@ -8,8 +8,9 @@
 function i18n(key, subs, fallback = '') {
     try {
         const msg = chrome?.i18n?.getMessage?.(key, subs);
-        return msg && msg.trim() ? msg : (fallback || '');
-    } catch (_) {
+        return msg?.trim() ? msg : (fallback || '');
+    } catch (err) {
+        console.warn('i18n.getMessage failed', {key, subs, err});
         return fallback || '';
     }
 }
@@ -33,7 +34,7 @@ let overlayElement = null;
 function showToast(message, iconType = 'spinner') {
     // Remove existing toast if present
     if (toastElement?.parentNode) {
-        toastElement.parentNode.removeChild(toastElement);
+        toastElement.remove();
     }
 
     // Create toast element
@@ -67,6 +68,7 @@ function showToast(message, iconType = 'spinner') {
     // Add icon based on iconType
     if (iconType !== 'none') {
         // Create icon element
+        /** @type {HTMLDivElement} */
         const icon = document.createElement('div');
         icon.className = `web-tldr-${iconType}`;
 
@@ -100,7 +102,7 @@ function showToast(message, iconType = 'spinner') {
 
             // Create checkmark
             icon.innerHTML = `
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
                     <circle cx="8" cy="8" r="7" stroke="#4CAF50" stroke-width="2"/>
                     <path d="M5 8L7 10L11 6" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
@@ -112,7 +114,7 @@ function showToast(message, iconType = 'spinner') {
 
             // Create X mark
             icon.innerHTML = `
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
                     <circle cx="8" cy="8" r="7" stroke="#F44336" stroke-width="2"/>
                     <path d="M5.5 5.5L10.5 10.5M5.5 10.5L10.5 5.5" stroke="#F44336" stroke-width="2" stroke-linecap="round"/>
                 </svg>
@@ -137,7 +139,7 @@ function showToast(message, iconType = 'spinner') {
 /**
  * Updates the message in an existing toast
  * @param {string} message - The new message to display
- * @param {string} iconType - Optional icon type to update ('spinner', 'success', 'error', or 'none')
+ * @param {string|null} iconType - Optional icon type to update ('spinner', 'success', 'error', or 'none')
  */
 function updateToast(message, iconType = null) {
     // Check if the message indicates a success or error to automatically set the icon type
@@ -169,6 +171,7 @@ function updateToast(message, iconType = null) {
     if (existingIcon) {
         existingIcon.remove();
     }
+    /** @type {HTMLDivElement} */
     const icon = document.createElement('div');
     icon.className = `web-tldr-${iconType}`;
     if (iconType === 'spinner') {
@@ -187,7 +190,7 @@ function updateToast(message, iconType = null) {
         });
 
         icon.innerHTML = `
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
                     <circle cx="8" cy="8" r="7" stroke="#4CAF50" stroke-width="2"/>
                     <path d="M5 8L7 10L11 6" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
@@ -198,13 +201,13 @@ function updateToast(message, iconType = null) {
         });
 
         icon.innerHTML = `
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
                     <circle cx="8" cy="8" r="7" stroke="#F44336" stroke-width="2"/>
                     <path d="M5.5 5.5L10.5 10.5M5.5 10.5L10.5 5.5" stroke="#F44336" stroke-width="2" stroke-linecap="round"/>
                 </svg>
             `;
     }
-    toastElement.insertBefore(icon, messageElement);
+    messageElement.before(icon);
 }
 
 /**
@@ -230,7 +233,7 @@ function removeToastNow() {
     toastElement.style.opacity = '0';
     setTimeout(() => {
         if (toastElement?.parentNode) {
-            toastElement.parentNode.removeChild(toastElement);
+            toastElement.remove();
             toastElement = null;
         }
     }, 300);
@@ -242,7 +245,7 @@ function removeToastNow() {
 function showOverlay() {
     // Remove the existing overlay if present
     if (overlayElement?.parentNode) {
-        overlayElement.parentNode.removeChild(overlayElement);
+        overlayElement.remove();
     }
 
     // Create overlay element
@@ -281,7 +284,7 @@ function removeOverlay() {
     overlayElement.style.opacity = '0';
     setTimeout(() => {
         if (overlayElement?.parentNode) {
-            overlayElement.parentNode.removeChild(overlayElement);
+            overlayElement.remove();
             overlayElement = null;
         }
     }, 300);
@@ -380,19 +383,19 @@ function waitForNotebookTitleChange(initialTitle, timeout = 10000) {
 }
 
 // --- Title management for better tab readability ---
-let __webTldrOriginalTitle = document.title;
 let __webTldrSourceTitle = null;
 
 function getReadableSourceTitle(url, injectedTitle) {
-    if (injectedTitle && injectedTitle.trim()) return injectedTitle.trim();
+    if (injectedTitle?.trim())
+        return injectedTitle.trim();
     try {
         const u = new URL(url);
         // Use pathname hint if available
-        const path = u.pathname && u.pathname !== '/' ? decodeURIComponent(u.pathname).split('/').filter(Boolean).slice(-1)[0] : '';
+        const path = u.pathname && u.pathname !== '/' ? decodeURIComponent(u.pathname).split('/').findLast(Boolean) : '';
         const host = u.hostname.replace(/^www\./, '');
-        const guess = path ? `${host} • ${path}` : host;
-        return guess;
-    } catch (_) {
+        return path ? `${host} • ${path}` : host;
+    } catch (err) {
+        console.error('Error parsing URL:', err);
         return url;
     }
 }
@@ -434,6 +437,7 @@ async function handlePromptAndGenerate() {
         promptTextarea.dispatchEvent(new Event('input', {bubbles: true}));
 
         // Wait for the submitting button to become enabled
+        /** @type {HTMLButtonElement} */
         let submitButton = await waitForElement('button:not([disabled]).submit-button');
 
         // Wait until the notebook title changes from the initial value instead of a fixed sleep
@@ -460,7 +464,9 @@ async function handlePromptAndGenerate() {
         // Wait for the loading indicator to appear and then disappear before announcing success
         try {
             await waitForAppearanceThenDisappearance('div > loading-component', 60000, 300000);
-        } catch (_) { /* ignore and proceed */ }
+        } catch (err) {
+            console.error('Loading indicator not found:', err);
+        }
 
         updateToast(toastI18n('toastSummarySuccess', null, 'Summary generated successfully!'));
         setNotebookTitle('success');
@@ -477,14 +483,18 @@ async function handlePromptAndGenerate() {
 async function importAndSummarizeSelectedText(selectedText, injectedTitle) {
     // Compute source title from snippet
     const snippet = (selectedText || '').trim();
-    __webTldrSourceTitle = injectedTitle && injectedTitle.trim() ? injectedTitle.trim() : (snippet.length > 80 ? snippet.slice(0, 77) + '…' : snippet) || i18n('titleSourceFallback', null, 'Page');
-
+    __webTldrSourceTitle = (
+        injectedTitle?.trim() ||
+        snippet.length > 80 ? snippet.slice(0, 77) + '…' : snippet ||
+            i18n('titleSourceFallback', null, 'Page')
+    );
     showOverlay();
     showToast(toastI18n('toastStarting', null, 'Starting summarization process...'));
     setNotebookTitle('loading');
 
     try {
         updateToast(toastI18n('toastOpeningAddSource', null, 'Opening Add Source menu...'));
+        /** @type {HTMLButtonElement} */
         const addSourceButton = await waitForElement('button:not([disabled]).create-new-button');
         addSourceButton.click();
 
@@ -492,12 +502,12 @@ async function importAndSummarizeSelectedText(selectedText, injectedTitle) {
 
         // Try to select the "Text" option
         updateToast(toastI18n('toastSelectingText', null, 'Selecting Text option...'));
+        /** @type {HTMLButtonElement} */
         const textOption = await waitForElement('#mat-mdc-chip-3');
         textOption.click();
 
         updateToast(toastI18n('toastAddingText', [snippet.length > 30 ? snippet.slice(0, 27) + '…' : snippet], 'Adding selected text...'));
         const textInput = await waitForElement('textarea#mat-input-0');
-        if (!textInput) throw new Error('Text input not found');
         textInput.value = selectedText;
         textInput.dispatchEvent(new Event('input', {bubbles: true}));
 
@@ -508,7 +518,8 @@ async function importAndSummarizeSelectedText(selectedText, injectedTitle) {
         // Clear storage keys if present
         try {
             await chrome.storage.local.remove(['selectedTextToSummarize', 'selectedTextSourceTitle']);
-        } catch (_) { /* ignore */
+        } catch (err) {
+            console.error('Error clearing storage keys:', err);
         }
 
         await handlePromptAndGenerate();
@@ -523,17 +534,20 @@ async function importAndSummarizeSelectedText(selectedText, injectedTitle) {
 
 async function importAndSummarizeWebpage() {
     // Prefer URL passed via injected variable to avoid race conditions; fall back to storage for backward compatibility
-    let url = typeof window !== 'undefined' ? window.__web_tldr_url : undefined;
+    let url = globalThis?.__web_tldr_url;
     if (!url) {
         try {
             const data = await chrome.storage.local.get('urlToSummarize');
             url = data.urlToSummarize;
-        } catch (_) {
-            /* ignore */
+        } catch (err) {
+            console.error('Error retrieving URL from storage:', err);
         }
     }
     // Compute source title as early as possible
-    __webTldrSourceTitle = getReadableSourceTitle(url || location.href, typeof window !== 'undefined' ? window.__web_tldr_source_title : null);
+    __webTldrSourceTitle = getReadableSourceTitle(
+        url || location.href,
+        globalThis?.__web_tldr_source_title,
+    );
 
     // Show overlay and initial toast
     showOverlay();
@@ -552,11 +566,13 @@ async function importAndSummarizeWebpage() {
         updateToast(toastI18n('toastOpeningAddSource', null, 'Opening Add Source menu...'));
 
         // Click the "+ Add Source" button
+        /** @type {HTMLButtonElement} */
         const addSourceButton = await waitForElement('button:not([disabled]).create-new-button');
         addSourceButton.click();
         updateToast(toastI18n('toastSelectingWebsite', null, 'Selecting Website option...'));
 
         // Click the "Website" option from the menu
+        /** @type {HTMLButtonElement} */
         const websiteOption = await waitForElement('#mat-mdc-chip-1');
         websiteOption.click();
         updateToast(toastI18n('toastAddingUrl', [`${url.substring(0, 30)}${url.length > 30 ? '...' : ''}`], `Adding URL: ${url.substring(0, 30)}${url.length > 30 ? '...' : ''}`));
@@ -577,8 +593,8 @@ async function importAndSummarizeWebpage() {
             if (existing && existing.urlToSummarize === url) {
                 await chrome.storage.local.remove('urlToSummarize');
             }
-        } catch (_) {
-            /* ignore */
+        } catch (err) {
+            console.error('Error cleaning up legacy storage key:', err);
         }
         await handlePromptAndGenerate();
     } catch (error) {
@@ -596,8 +612,8 @@ async function __webTldrStart() {
             selectedTextToSummarize = null,
             selectedTextSourceTitle = null
         } = await chrome.storage.local.get({selectedTextToSummarize: null, selectedTextSourceTitle: null});
-        if (selectedTextToSummarize && selectedTextToSummarize.trim()) {
-            const injectedTitle = typeof window !== 'undefined' ? (window.__web_tldr_source_title || selectedTextSourceTitle) : selectedTextSourceTitle;
+        if (selectedTextToSummarize?.trim()) {
+            const injectedTitle = globalThis?.__web_tldr_source_title || selectedTextSourceTitle;
             await importAndSummarizeSelectedText(selectedTextToSummarize, injectedTitle);
         } else {
             await importAndSummarizeWebpage();
@@ -636,7 +652,12 @@ async function waitForAppearanceThenDisappearance(selector, appearTimeout = 6000
 
         return await new Promise((resolve) => {
             let resolved = false;
-            const resolveOnce = (val) => { if (!resolved) { resolved = true; resolve(val); } };
+            const resolveOnce = (val) => {
+                if (!resolved) {
+                    resolved = true;
+                    resolve(val);
+                }
+            };
 
             const observer = new MutationObserver(() => {
                 const exists = document.querySelector(selector);
@@ -646,7 +667,7 @@ async function waitForAppearanceThenDisappearance(selector, appearTimeout = 6000
                 }
             });
 
-            observer.observe(document.body, { childList: true, subtree: true, attributes: true, characterData: true });
+            observer.observe(document.body, {childList: true, subtree: true, attributes: true, characterData: true});
 
             const timeoutId = setTimeout(() => {
                 observer.disconnect();
