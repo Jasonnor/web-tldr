@@ -523,7 +523,7 @@ async function importAndSummarizeSelectedText(selectedText, injectedTitle) {
         'Adding selected text...'
       )
     );
-    const textInput = await waitForElement('textarea#mat-input-0');
+    const textInput = await waitForElement('textarea#mat-input-1');
     textInput.value = selectedText;
     textInput.dispatchEvent(new Event('input', { bubbles: true }));
 
