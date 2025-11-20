@@ -1,106 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <title>Web TL;DR Settings</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            color: #e0e0e0;
-            background-color: #1e1e1e;
-        }
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        color: #e0e0e0;
+        background-color: #1e1e1e;
+      }
 
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-        }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+      }
 
-        h1 {
-            color: #4285f4;
-            font-size: 24px;
-            margin-bottom: 20px;
-        }
+      h1 {
+        color: #4285f4;
+        font-size: 24px;
+        margin-bottom: 20px;
+      }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
+      .form-group {
+        margin-bottom: 20px;
+      }
 
-        p {
-            color: #b0b0b0;
-            font-size: 14px;
-            margin-top: 8px;
-        }
+      p {
+        color: #b0b0b0;
+        font-size: 14px;
+        margin-top: 8px;
+      }
 
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
 
-        textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #444;
-            border-radius: 4px;
-            font-size: 14px;
-            background-color: #2d2d2d;
-            color: #e0e0e0;
-            min-height: 100px;
-            resize: vertical;
-            font-family: Arial, sans-serif;
-        }
+      textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #444;
+        border-radius: 4px;
+        font-size: 14px;
+        background-color: #2d2d2d;
+        color: #e0e0e0;
+        min-height: 100px;
+        resize: vertical;
+        font-family: Arial, sans-serif;
+      }
 
-        textarea:focus {
-            outline: none;
-            border-color: #4285f4;
-            box-shadow: 0 0 5px rgba(66, 133, 244, 0.5);
-        }
+      textarea:focus {
+        outline: none;
+        border-color: #4285f4;
+        box-shadow: 0 0 5px rgba(66, 133, 244, 0.5);
+      }
 
-        button {
-            background-color: #4285f4;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
+      button {
+        background-color: #4285f4;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      }
 
-        button:hover {
-            background-color: #3367d6;
-        }
+      button:hover {
+        background-color: #3367d6;
+      }
 
-        .status {
-            margin-top: 10px;
-            padding: 8px;
-            border-radius: 4px;
-            display: none;
-        }
+      .status {
+        margin-top: 10px;
+        padding: 8px;
+        border-radius: 4px;
+        display: none;
+      }
     </style>
-</head>
-<body>
-<div class="container">
-    <h1>Web TL;DR Settings</h1>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Web TL;DR Settings</h1>
 
-    <div class="form-group">
+      <div class="form-group">
         <label for="promptText">Summary Prompt Text:</label>
         <textarea id="promptText" placeholder="Enter the prompt text for summarization">TL;DR</textarea>
         <p>This text will be used as the prompt when generating summaries. You can enter a longer prompt if needed.</p>
-    </div>
+      </div>
 
-    <div class="form-group">
+      <div class="form-group">
         <label for="openInBackground">
-            <input type="checkbox" id="openInBackground"/>
-            Open Notebook tab in background
+          <input type="checkbox" id="openInBackground" />
+          Open Notebook tab in background
         </label>
         <p>If enabled, the NotebookLM tab will open in the background without stealing focus.</p>
+      </div>
+
+      <button id="saveButton">Save Settings</button>
+
+      <div id="status" class="status"></div>
     </div>
 
-    <button id="saveButton">Save Settings</button>
-
-    <div id="status" class="status"></div>
-</div>
-
-<script src="options.js"></script>
-</body>
+    <script src="options.js"></script>
+  </body>
 </html>
