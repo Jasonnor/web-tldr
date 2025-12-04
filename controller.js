@@ -474,7 +474,7 @@ async function handlePromptAndGenerate() {
 
     // Wait for the loading indicator to appear and then disappear before announcing success
     try {
-      await waitForAppearanceThenDisappearance('div > loading-component', 60000, 300000);
+      await waitForAppearanceThenDisappearance('div > div.thinking-animation', 60000, 300000);
     } catch (err) {
       console.error('Loading indicator not found:', err);
     }
