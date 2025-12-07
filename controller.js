@@ -508,12 +508,10 @@ async function importAndSummarizeSelectedText(selectedText, injectedTitle) {
     const addSourceButton = await waitForElement('button:not([disabled]).create-new-button');
     addSourceButton.click();
 
-    // Click the "Website" option from the menu
-
-    // Try to select the "Text" option
+    // Select the "Text" option
     updateToast(toastI18n('toastSelectingText', null, 'Selecting Text option...'));
     /** @type {HTMLButtonElement} */
-    const textOption = await waitForElement('#mat-mdc-chip-3');
+    const textOption = await waitForElement('div.drop-zone-actions > button:nth-child(4)');
     textOption.click();
 
     updateToast(
@@ -523,13 +521,13 @@ async function importAndSummarizeSelectedText(selectedText, injectedTitle) {
         'Adding selected text...'
       )
     );
-    const textInput = await waitForElement('textarea#mat-input-1');
+    const textInput = await waitForElement('textarea[formcontrolname="copiedText"]');
     textInput.value = selectedText;
     textInput.dispatchEvent(new Event('input', { bubbles: true }));
 
     setNotebookTitle('importing');
-    const importButton = await waitForElement('button:not([disabled]).mat-primary.mat-mdc-unelevated-button');
-    importButton.closest('button').click();
+    const importButton = await waitForElement('add-sources-dialog > div > div.mat-mdc-dialog-actions.mdc-dialog__actions.mat-mdc-dialog-actions-align-end.ng-star-inserted > button:not([disabled])');
+    importButton.click();
 
     // Clear storage keys if present
     try {
@@ -586,7 +584,7 @@ async function importAndSummarizeWebpage() {
 
     // Click the "Website" option from the menu
     /** @type {HTMLButtonElement} */
-    const websiteOption = await waitForElement('#mat-mdc-chip-1');
+    const websiteOption = await waitForElement('div.drop-zone-actions > button:nth-child(2)');
     websiteOption.click();
     updateToast(
       toastI18n(
@@ -597,14 +595,13 @@ async function importAndSummarizeWebpage() {
     );
 
     // Find the input, paste the URL, and click import
-    const urlInput = await waitForElement('textarea[formcontrolname="newUrl"]');
+    const urlInput = await waitForElement('textarea[formcontrolname="urls"]');
     urlInput.value = url;
     urlInput.dispatchEvent(new Event('input', { bubbles: true }));
     updateToast(toastI18n('toastImporting', null, 'Importing webpage...'));
     setNotebookTitle('importing');
-
-    const importButton = await waitForElement('button:not([disabled]).submit-button');
-    importButton.closest('button').click();
+    const importButton = await waitForElement('add-sources-dialog > div > div.mat-mdc-dialog-actions.mdc-dialog__actions.mat-mdc-dialog-actions-align-end.ng-star-inserted > button:not([disabled])');
+    importButton.click();
 
     // Clean up a legacy storage key only if it matches our URL (backward compatibility)
     try {
