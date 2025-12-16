@@ -449,7 +449,7 @@ async function handlePromptAndGenerate() {
 
     // Wait for the submitting button to become enabled
     /** @type {HTMLButtonElement} */
-    let submitButton = await waitForElement('button:not([disabled]).submit-button');
+    let submitButton = await waitForElement('button[type="submit"]:not([disabled])');
 
     // Wait until the notebook title changes from the initial value instead of a fixed sleep
     await waitForNotebookTitleChange(initialNotebookTitle, 15000);
@@ -464,7 +464,7 @@ async function handlePromptAndGenerate() {
     let attempts = 0;
 
     while (promptTextarea.value !== '' && attempts < maxAttempts) {
-      submitButton = await waitForElement('button:not([disabled]).submit-button');
+      submitButton = await waitForElement('button[type="submit"]:not([disabled])');
       submitButton.click();
       attempts++;
 
