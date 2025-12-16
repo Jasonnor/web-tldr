@@ -436,8 +436,8 @@ async function handlePromptAndGenerate() {
   // Only run if the textarea is empty to avoid issues on reloads
   if (promptTextarea.value === '') {
     // Capture the initial notebook title using waitForElement to ensure existence
-    const titleElement = await waitForElement('h1.notebook-title', 10000);
-    const initialNotebookTitle = titleElement?.textContent ?? null;
+    // const titleElement = await waitForElement('h1.notebook-title', 10000);
+    // const initialNotebookTitle = titleElement?.textContent ?? null;
 
     // Get the prompt text from settings, default to "TL;DR" if not set
     const promptData = await chrome.storage.local.get({ promptText: i18n('promptDefault', null, 'TL;DR') });
@@ -452,10 +452,13 @@ async function handlePromptAndGenerate() {
     let submitButton = await waitForElement('button[type="submit"]:not([disabled])');
 
     // Wait until the notebook title changes from the initial value instead of a fixed sleep
-    await waitForNotebookTitleChange(initialNotebookTitle, 15000);
+    // await waitForNotebookTitleChange(initialNotebookTitle, 15000);
+
+    // Wait until loading indicator disappears
+    await waitForAppearanceThenDisappearance('div.notebook-guide-loading-animation');
 
     // The new title is the source title, so grab it for the tab title
-    __webTldrSourceTitle = document.querySelector('h1.notebook-title')?.textContent || __webTldrSourceTitle;
+    // __webTldrSourceTitle = document.querySelector('h1.notebook-title')?.textContent || __webTldrSourceTitle;
 
     // Click the submitting button repeatedly until the textarea is empty
     updateToast(toastI18n('toastGenerating', null, 'Generating summary...'));
