@@ -552,29 +552,30 @@ async function importAndSummarizeSelectedText(selectedText, injectedTitle) {
 async function importAndSummarizeWebpage() {
   // Prefer URL passed via injected variable to avoid race conditions; fall back to storage for backward compatibility
   let url = globalThis?.__web_tldr_url;
+  let sourceTitle = globalThis?.__web_tldr_source_title;
+
   if (!url) {
     try {
-      const data = await chrome.storage.local.get('urlToSummarize');
+      const data = await chrome.storage.local.get(['urlToSummarize', 'sourceTitle']);
       url = data.urlToSummarize;
+      sourceTitle = data.sourceTitle;
     } catch (err) {
       console.error('Error retrieving URL from storage:', err);
     }
   }
   // Compute source title as early as possible
-  __webTldrSourceTitle = getReadableSourceTitle(url || location.href, globalThis?.__web_tldr_source_title);
+  __webTldrSourceTitle = getReadableSourceTitle(url || location.href, sourceTitle);
 
-  // Show overlay and initial toast
+  if (!url) {
+    // If no URL is found in storage, we assume this is a manual visit
+    // and do nothing (silently exit without showing UI).
+    return;
+  }
+
+  // Show overlay and initial toast ONLY after confirming we have work to do
   showOverlay();
   showToast(toastI18n('toastStarting', null, 'Starting summarization process...'));
   setNotebookTitle('loading');
-
-  if (!url) {
-    console.error('URL not found for summarization. Aborting.');
-    updateToast(i18n('errorUrlNotFound', null, 'Error: URL not found. Please try again.'));
-    removeToast(5000);
-    removeOverlay();
-    return;
-  }
 
   try {
     updateToast(toastI18n('toastOpeningAddSource', null, 'Opening Add Source menu...'));
@@ -608,9 +609,9 @@ async function importAndSummarizeWebpage() {
 
     // Clean up a legacy storage key only if it matches our URL (backward compatibility)
     try {
-      const existing = await chrome.storage.local.get('urlToSummarize');
+      const existing = await chrome.storage.local.get(['urlToSummarize', 'sourceTitle']);
       if (existing && existing.urlToSummarize === url) {
-        await chrome.storage.local.remove('urlToSummarize');
+        await chrome.storage.local.remove(['urlToSummarize', 'sourceTitle']);
       }
     } catch (err) {
       console.error('Error cleaning up legacy storage key:', err);
