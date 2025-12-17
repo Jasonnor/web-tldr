@@ -6,7 +6,6 @@
   "description": "__MSG_extDescription__",
   "permissions": [
     "activeTab",
-    "scripting",
     "storage",
     "contextMenus"
   ],
@@ -23,7 +22,7 @@
   "content_scripts": [
     {
       "matches": [
-        "https://notebooklm.google.com/notebook/*"
+        "https://notebooklm.google.com/*"
       ],
       "js": [
         "controller.js"

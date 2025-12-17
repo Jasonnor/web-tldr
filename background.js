@@ -4,46 +4,22 @@ async function launchSummarization(urlToSummarize, sourceTab, linkText = null) {
       console.error('Invalid URL for summarization.');
       return;
     }
-    await chrome.storage.local.set({ urlToSummarize: urlToSummarize });
+    await chrome.storage.local.set({
+      urlToSummarize: urlToSummarize,
+      sourceTitle: linkText || sourceTab?.title || null,
+    });
 
     // Read user preference for opening in the background (default: false)
     const { openInBackground = false } = await chrome.storage.local.get({ openInBackground: false });
 
     // Open NotebookLM in a new tab, immediately to the right of the current tab
-    const notebookTab = await chrome.tabs.create({
+    await chrome.tabs.create({
       url: 'https://notebooklm.google.com/',
       index: typeof sourceTab?.index === 'number' ? sourceTab.index + 1 : undefined,
       windowId: sourceTab?.windowId,
       openerTabId: sourceTab?.id,
       active: !openInBackground,
     });
-
-    // Set up a listener to wait for the tab to finish loading
-    const listener = (tabId, changeInfo, tab) => {
-      if (
-        tabId === notebookTab.id &&
-        changeInfo.status === 'complete' &&
-        tab.url.startsWith('https://notebooklm.google.com')
-      ) {
-        // Inject the URL into the tab's isolated world to avoid race conditions
-        chrome.scripting.executeScript({
-          target: { tabId: tabId },
-          func: (u, t, lt) => {
-            globalThis.__web_tldr_url = u;
-            globalThis.__web_tldr_source_title = lt || t;
-          },
-          args: [urlToSummarize, sourceTab?.title || null, linkText],
-        });
-
-        // Inject the controller script
-        chrome.scripting.executeScript({
-          target: { tabId: tabId },
-          files: ['controller.js'],
-        });
-
-        chrome.tabs.onUpdated.removeListener(listener);
-      }
-    };
 
     chrome.tabs.onUpdated.addListener(listener);
   } catch (error) {
