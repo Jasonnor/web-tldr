@@ -458,7 +458,7 @@ async function handlePromptAndGenerate() {
     await waitForAppearanceThenDisappearance('div.notebook-guide-loading-animation');
 
     // The new title is the source title, so grab it for the tab title
-    // __webTldrSourceTitle = document.querySelector('h1.notebook-title')?.textContent || __webTldrSourceTitle;
+    __webTldrSourceTitle = document.querySelector('div.source-title')?.textContent || __webTldrSourceTitle;
 
     // Click the submitting button repeatedly until the textarea is empty
     updateToast(toastI18n('toastGenerating', null, 'Generating summary...'));
