@@ -271,7 +271,7 @@ function showOverlay() {
     left: '0',
     width: '100%',
     height: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    backgroundColor: 'rgba(0, 0, 0, 0.15)',
     zIndex: '9998',
     pointerEvents: 'none',
     transition: 'opacity 0.3s ease-in-out',
