@@ -1,6 +1,23 @@
 # Web TL;DR for NotebookLM
 
+<p align="center">
+  <img src="assets/web-tldr-small-promotional-tile.png" alt="Web TL;DR Hero" width="400">
+</p>
+
 A Chrome extension that seamlessly integrates [Google NotebookLM](https://notebooklm.google.com/) into your browsing workflow. Instantly summarize webpages, specific links, or selected text with a single click.
+
+## Demo
+
+<p align="center">
+  <img src="assets/web-tldr-demo.gif" alt="Web TL;DR Demo" width="600">
+</p>
+
+<p align="center">
+  <a href="https://youtu.be/urFhD-QnPug">
+    <img src="https://img.youtube.com/vi/urFhD-QnPug/0.jpg" alt="Watch the Demo Video" width="400"><br>
+    Watch Demo Video
+  </a>
+</p>
 
 ## Features
 
