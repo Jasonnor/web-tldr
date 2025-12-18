@@ -20,8 +20,6 @@ async function launchSummarization(urlToSummarize, sourceTab, linkText = null) {
       openerTabId: sourceTab?.id,
       active: !openInBackground,
     });
-
-    chrome.tabs.onUpdated.addListener(listener);
   } catch (error) {
     console.error('[Web TL;DR for NotebookLM - background] An error occurred: ', error);
   }
