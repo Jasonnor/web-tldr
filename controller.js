@@ -303,12 +303,12 @@ function removeOverlay() {
 }
 
 /**
- * Wait for an element to appear in the DOM with timeout.
- * @param {string} selector The CSS selector.
+ * Wait for any element to matching a list of predicate functions.
+ * @param {Array<() => Element|null>} predicates List of functions that return an element if found.
  * @param {number} timeout Milliseconds to wait before giving up.
  * @returns {Promise<Element|null>}
  */
-function waitForElement(selector, timeout = 10000) {
+function waitForAnyElement(predicates, timeout = 10000) {
   return new Promise((resolve) => {
     let resolved = false;
     let timeoutId;
@@ -320,36 +320,46 @@ function waitForElement(selector, timeout = 10000) {
       }
     };
 
-    const observer = new MutationObserver(() => {
-      const element = document.querySelector(selector);
-      if (element) {
-        observer.disconnect();
-        if (timeoutId) clearTimeout(timeoutId);
-        resolveOnce(element);
+    const checkPredicates = () => {
+      for (const predicate of predicates) {
+        const element = predicate();
+        if (element) {
+          observer.disconnect();
+          if (timeoutId) clearTimeout(timeoutId);
+          resolveOnce(element);
+          return true;
+        }
       }
+      return false;
+    };
+
+    const observer = new MutationObserver(() => {
+      if (checkPredicates()) return;
     });
 
     // Check immediately in case it's already there
-    const initialElement = document.querySelector(selector);
-    if (initialElement) {
-      return resolveOnce(initialElement);
-    }
+    if (checkPredicates()) return;
 
-    observer.observe(document.body, { childList: true, subtree: true });
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
 
     // Timeout logic
     timeoutId = setTimeout(() => {
-      const element = document.querySelector(selector);
-      if (element) {
-        observer.disconnect();
-        resolveOnce(element);
-      } else {
-        observer.disconnect();
-        console.log(`Timeout: Element "${selector}" not found after ${timeout}ms, but continuing execution.`);
-        resolveOnce(null);
-      }
+      if (checkPredicates()) return;
+      observer.disconnect();
+      console.log(`Timeout: No matching element found after ${timeout}ms, but continuing execution.`);
+      resolveOnce(null);
     }, timeout);
   });
+}
+
+/**
+ * Wait for an element to appear in the DOM with timeout.
+ * @param {string} selector The CSS selector.
+ * @param {number} timeout Milliseconds to wait before giving up.
+ * @returns {Promise<Element|null>}
+ */
+function waitForElement(selector, timeout = 10000) {
+  return waitForAnyElement([() => document.querySelector(selector)], timeout);
 }
 
 /**
@@ -529,7 +539,9 @@ async function importAndSummarizeSelectedText(selectedText, injectedTitle) {
     textInput.dispatchEvent(new Event('input', { bubbles: true }));
 
     setNotebookTitle('importing');
-    const importButton = await waitForElement('add-sources-dialog > div > div.mat-mdc-dialog-actions.mdc-dialog__actions.mat-mdc-dialog-actions-align-end.ng-star-inserted > button:not([disabled])');
+    const importButton = await waitForElement(
+      'add-sources-dialog > div > div.mat-mdc-dialog-actions.mdc-dialog__actions.mat-mdc-dialog-actions-align-end.ng-star-inserted > button:not([disabled])'
+    );
     importButton.click();
 
     // Clear storage keys if present
@@ -588,7 +600,13 @@ async function importAndSummarizeWebpage() {
 
     // Click the "Website" option from the menu
     /** @type {HTMLButtonElement} */
-    const websiteOption = await waitForElement('div.drop-zone-actions > button:nth-child(2)');
+    const websiteOption = await waitForAnyElement([
+      () => document.querySelector('div.drop-zone-actions > button:nth-child(2)'),
+      () =>
+        Array.from(document.querySelectorAll('span')).find(
+          (el) => el.textContent.trim() === 'Website' && el.offsetParent !== null
+        ),
+    ]);
     websiteOption.click();
     updateToast(
       toastI18n(
@@ -604,7 +622,9 @@ async function importAndSummarizeWebpage() {
     urlInput.dispatchEvent(new Event('input', { bubbles: true }));
     updateToast(toastI18n('toastImporting', null, 'Importing webpage...'));
     setNotebookTitle('importing');
-    const importButton = await waitForElement('add-sources-dialog > div > div.mat-mdc-dialog-actions.mdc-dialog__actions.mat-mdc-dialog-actions-align-end.ng-star-inserted > button:not([disabled])');
+    const importButton = await waitForElement(
+      'add-sources-dialog > div > div.mat-mdc-dialog-actions.mdc-dialog__actions.mat-mdc-dialog-actions-align-end.ng-star-inserted > button:not([disabled])'
+    );
     importButton.click();
 
     // Clean up a legacy storage key only if it matches our URL (backward compatibility)
