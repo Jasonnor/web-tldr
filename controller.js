@@ -627,7 +627,6 @@ async function importAndSummarizeWebpage() {
     // Find the input, paste the URL, and click import
     const urlInput = await waitForAnyElement([
       () => document.querySelector('textarea[formcontrolname="urls"]'),
-      () => document.querySelector('#mat-input-1'),
     ]);
     urlInput.value = url;
     urlInput.dispatchEvent(new Event('input', { bubbles: true }));
