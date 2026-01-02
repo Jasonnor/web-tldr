@@ -524,7 +524,10 @@ async function importAndSummarizeSelectedText(selectedText, injectedTitle) {
     // Select the "Text" option
     updateToast(toastI18n('toastSelectingText', null, 'Selecting Text option...'));
     /** @type {HTMLButtonElement} */
-    const textOption = await waitForElement('div.drop-zone-actions > button:nth-child(4)');
+    const textOption = await waitForAnyElement([
+      () => document.querySelector('div.drop-zone-actions > button:nth-child(4)'),
+      () => document.querySelector('#mat-mdc-chip-3'),
+    ]);
     textOption.click();
 
     updateToast(
@@ -534,14 +537,18 @@ async function importAndSummarizeSelectedText(selectedText, injectedTitle) {
         'Adding selected text...'
       )
     );
-    const textInput = await waitForElement('textarea[formcontrolname="copiedText"]');
+    const textInput = await waitForAnyElement([
+      () => document.querySelector('textarea[formcontrolname="copiedText"]'),
+      () => document.querySelector('textarea[formcontrolname="text"]'),
+    ]);
     textInput.value = selectedText;
     textInput.dispatchEvent(new Event('input', { bubbles: true }));
 
     setNotebookTitle('importing');
-    const importButton = await waitForElement(
-      'add-sources-dialog > div > div.mat-mdc-dialog-actions.mdc-dialog__actions.mat-mdc-dialog-actions-align-end.ng-star-inserted > button:not([disabled])'
-    );
+    const importButton = await waitForAnyElement([
+      () => document.querySelector('add-sources-dialog > div > div.mat-mdc-dialog-actions.mdc-dialog__actions.mat-mdc-dialog-actions-align-end.ng-star-inserted > button:not([disabled])'),
+      () => document.querySelector('#mat-mdc-dialog-0 > div > div > upload-dialog > div > div.content > paste-text > form > button:not([disabled])'),
+    ]);
     importButton.click();
 
     // Clear storage keys if present
@@ -602,6 +609,7 @@ async function importAndSummarizeWebpage() {
     /** @type {HTMLButtonElement} */
     const websiteOption = await waitForAnyElement([
       () => document.querySelector('div.drop-zone-actions > button:nth-child(2)'),
+      () => document.querySelector('#mat-mdc-chip-1'),
       () =>
         Array.from(document.querySelectorAll('span')).find(
           (el) => el.textContent.trim() === 'Website' && el.offsetParent !== null
@@ -617,14 +625,18 @@ async function importAndSummarizeWebpage() {
     );
 
     // Find the input, paste the URL, and click import
-    const urlInput = await waitForElement('textarea[formcontrolname="urls"]');
+    const urlInput = await waitForAnyElement([
+      () => document.querySelector('textarea[formcontrolname="urls"]'),
+      () => document.querySelector('#mat-input-1'),
+    ]);
     urlInput.value = url;
     urlInput.dispatchEvent(new Event('input', { bubbles: true }));
     updateToast(toastI18n('toastImporting', null, 'Importing webpage...'));
     setNotebookTitle('importing');
-    const importButton = await waitForElement(
-      'add-sources-dialog > div > div.mat-mdc-dialog-actions.mdc-dialog__actions.mat-mdc-dialog-actions-align-end.ng-star-inserted > button:not([disabled])'
-    );
+    const importButton = await waitForAnyElement([
+      () => document.querySelector('add-sources-dialog > div > div.mat-mdc-dialog-actions.mdc-dialog__actions.mat-mdc-dialog-actions-align-end.ng-star-inserted > button:not([disabled])'),
+      () => document.querySelector('#mat-mdc-dialog-0 > div > div > upload-dialog > div > div.content > website-upload > form > button:not([disabled])'),
+    ]);
     importButton.click();
 
     // Clean up a legacy storage key only if it matches our URL (backward compatibility)
