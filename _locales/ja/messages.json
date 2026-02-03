@@ -27,6 +27,7 @@
   "toastSummarySuccess": {"message": "要約が正常に生成されました！"},
   "toastImportSuccess": {"message": "ページを正常にインポートしました！"},
   "toastGenericError": {"message": "エラーが発生しました。もう一度お試しください。"},
+  "toastImportFailed": {"message": "ソースのインポートに失敗しました。URLを確認して、もう一度お試しください。"},
   "titleSourceFallback": {"message": "ページ"},
   "brandNotebookLM": {"message": "NotebookLM"},
   "toastSelectingText": {"message": "「テキスト」オプションを選択しています..."},

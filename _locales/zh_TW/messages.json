@@ -27,6 +27,7 @@
   "toastSummarySuccess": {"message": "已成功產生摘要！"},
   "toastImportSuccess": {"message": "已成功匯入頁面！"},
   "toastGenericError": {"message": "發生錯誤。請再試一次。"},
+  "toastImportFailed": {"message": "匯入來源失敗。請檢查網址並重試。"},
   "titleSourceFallback": {"message": "頁面"},
   "brandNotebookLM": {"message": "NotebookLM"},
   "toastSelectingText": {"message": "正在選取「文字」選項..."},

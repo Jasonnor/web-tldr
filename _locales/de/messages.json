@@ -27,6 +27,7 @@
   "toastSummarySuccess": {"message": "Zusammenfassung erfolgreich erstellt!"},
   "toastImportSuccess": {"message": "Seite erfolgreich importiert!"},
   "toastGenericError": {"message": "Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut."},
+  "toastImportFailed": {"message": "Fehler beim Importieren der Quelle. Bitte überprüfen Sie die URL und versuchen Sie es erneut."},
   "titleSourceFallback": {"message": "Seite"},
   "brandNotebookLM": {"message": "NotebookLM"},
   "toastSelectingText": {"message": "Option „Text“ wird ausgewählt…"},

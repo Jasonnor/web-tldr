@@ -438,10 +438,16 @@ function setNotebookTitle(status) {
 }
 
 // Shared post-import flow for both URL and Text sources
-async function handlePromptAndGenerate() {
+async function handlePromptAndGenerate(targetUrl = null) {
   updateToast(toastI18n('toastWaitingLoad', null, 'Waiting for page to load...'));
 
   const promptTextarea = await waitForElement('textarea.query-box-input');
+
+  // If promptTextarea is null (timeout), log and exit
+  if (!promptTextarea) {
+     console.error('[Web TL;DR] Timed out waiting for prompt textarea.');
+     return;
+  }
 
   // Only run if the textarea is empty to avoid issues on reloads
   if (promptTextarea.value === '') {
@@ -457,9 +463,53 @@ async function handlePromptAndGenerate() {
     promptTextarea.value = promptText;
     promptTextarea.dispatchEvent(new Event('input', { bubbles: true }));
 
-    // Wait for the submitting button to become enabled
+    // Wait for either the Submit button (success) or an Error container (failure)
+    const resultElement = await waitForAnyElement([
+      () => document.querySelector('button[type="submit"]:not([disabled])'),
+      () => {
+        const errorContainer = document.querySelector('.single-source-error-container');
+        if (!errorContainer || !targetUrl) return null;
+
+        // Check if error matches target URL
+        const normalizedUrl = targetUrl.replace(/^https?:\/\//, '').split('?')[0];
+        if (errorContainer.textContent.includes(normalizedUrl) || errorContainer.textContent.includes(targetUrl)) {
+          return errorContainer;
+        }
+        return null; // Ignore unrelated errors
+      }
+    ], 30000); // 30s timeout
+
+    // Check if we hit an error
+    if (resultElement && resultElement.classList.contains('single-source-error-container')) {
+      console.log('[Web TL;DR] Detected source import failure:', resultElement);
+      
+      try {
+        await chrome.storage.local.remove(['urlToSummarize', 'sourceTitle']);
+        console.log('[Web TL;DR] Cleared storage due to error.');
+      } catch (e) {
+        console.error('[Web TL;DR] Failed to clear storage:', e);
+      }
+
+      updateToast(toastI18n('toastImportFailed', null, 'Failed to import source. Please check the URL and try again.'), 'error');
+      setNotebookTitle('error');
+      
+      removeToast(5000);
+      removeOverlay();
+      return; // Stop execution
+    }
+
     /** @type {HTMLButtonElement} */
-    let submitButton = await waitForElement('button[type="submit"]:not([disabled])');
+    let submitButton = resultElement;
+
+    // Double check we actually have the button (in case of weird timeout/null return)
+    if (!submitButton) {
+         submitButton = document.querySelector('button[type="submit"]:not([disabled])');
+    }
+
+    if (!submitButton) {
+        console.warn('[Web TL;DR] Submit button not found after prompt entry.');
+        return;
+    }
 
     // Wait until the notebook title changes from the initial value instead of a fixed sleep
     // await waitForNotebookTitleChange(initialNotebookTitle, 15000);
@@ -647,7 +697,8 @@ async function importAndSummarizeWebpage() {
     } catch (err) {
       console.error('Error cleaning up legacy storage key:', err);
     }
-    await handlePromptAndGenerate();
+
+    await handlePromptAndGenerate(url);
   } catch (error) {
     console.error('[Web TL;DR for NotebookLM - controller] An error occurred:', error);
     updateToast(toastI18n('toastGenericError', null, 'An error occurred. Please try again.'));

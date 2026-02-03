@@ -27,6 +27,7 @@
   "toastSummarySuccess": {"message": "摘要已成功生成！"},
   "toastImportSuccess": {"message": "页面导入成功！"},
   "toastGenericError": {"message": "发生错误。请重试。"},
+  "toastImportFailed": {"message": "导入源失败。请检查 URL 并重试。"},
   "titleSourceFallback": {"message": "页面"},
   "brandNotebookLM": {"message": "NotebookLM"},
   "toastSelectingText": {"message": "正在选择“文本”选项..."},
