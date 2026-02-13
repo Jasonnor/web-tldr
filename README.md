@@ -4,6 +4,12 @@
   <img src="assets/web-tldr-small-promotional-tile.png" alt="Web TL;DR Hero" width="400">
 </p>
 
+<p align="center">
+  <a href="https://chromewebstore.google.com/detail/web-tldr-for-notebooklm-p/oidbefjbmllmbalkpccifpimlcmcjpkc">
+    <img src="https://img.shields.io/badge/Chrome_Web_Store-Available_Now-blue?logo=google-chrome&logoColor=white" alt="Available in the Chrome Web Store">
+  </a>
+</p>
+
 A Chrome extension that seamlessly integrates [Google NotebookLM](https://notebooklm.google.com/) into your browsing workflow. Instantly summarize webpages, specific links, or selected text with a single click.
 
 ## Demo
@@ -37,7 +43,12 @@ A Chrome extension that seamlessly integrates [Google NotebookLM](https://notebo
 
 ## Installation
 
-### Developer Mode Installation
+### From Chrome Web Store (Recommended)
+
+1. Visit the [Web TL;DR for NotebookLM](https://chromewebstore.google.com/detail/web-tldr-for-notebooklm-p/oidbefjbmllmbalkpccifpimlcmcjpkc) page in the Chrome Web Store.
+2. Click **"Add to Chrome"**.
+
+### Developer Mode Installation (For Development)
 
 1. Download or clone this repository to your local machine.
 2. Open Chrome and navigate to `chrome://extensions/`.
