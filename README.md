@@ -8,11 +8,16 @@
   <a href="https://chromewebstore.google.com/detail/web-tldr-for-notebooklm-p/oidbefjbmllmbalkpccifpimlcmcjpkc">
     <img src="https://img.shields.io/badge/Chrome_Web_Store-Available_Now-blue?logo=google-chrome&logoColor=white" alt="Available in the Chrome Web Store">
   </a>
+  <img src="https://img.shields.io/badge/version-1.0.0-green" alt="Version">
+  <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT">
+  <img src="https://img.shields.io/badge/locales-8-orange" alt="Locales: 8">
 </p>
 
-A Chrome extension that seamlessly integrates [Google NotebookLM](https://notebooklm.google.com/) into your browsing workflow. Instantly summarize webpages, specific links, or selected text with a single click.
+A powerful Chrome extension that seamlessly integrates [Google NotebookLM](https://notebooklm.google.com/) into your browsing workflow. Instantly summarize webpages, specific links, or selected text with a single click and smart automation.
 
-## Demo
+---
+
+## 📺 Demo
 
 <p align="center">
   <img src="assets/web-tldr-demo.gif" alt="Web TL;DR Demo" width="600">
@@ -21,88 +26,87 @@ A Chrome extension that seamlessly integrates [Google NotebookLM](https://notebo
 <p align="center">
   <a href="https://youtu.be/urFhD-QnPug">
     <img src="https://img.youtube.com/vi/urFhD-QnPug/0.jpg" alt="Watch the Demo Video" width="400"><br>
-    Watch Demo Video
+    <b>Watch the Full Demo Video</b>
   </a>
 </p>
 
-## Features
+## ✨ Features
 
-- **One-Click Summarization**: Click the extension icon to summarize the current page.
-- **Context Menu Integration**:
+- **🚀 One-Click Summarization**: Instantly summarize the current page via the extension icon.
+- **🖱️ Context Menu Integration**:
   - Right-click any page to "Summarize this page".
-  - Right-click any link to "Summarize link" (bypassing the need to open it first).
-  - Select text, right-click, and choose "Summarize selection" to focus on specific content.
-- **Smart Automation**:
-  - Automatically opens NotebookLM in a new tab.
-  - Imports the target content (URL or selected text).
-  - Automatically enters and submits your prompt (default: "TL;DR").
-- **Visual Feedback**:
-  - **Toast Notifications**: Real-time status updates (Importing, Generating, Success) via a non-intrusive toast.
-  - **Tab Title Status**: The NotebookLM tab title updates with emojis (⏳, ✨, ✅) so you can monitor progress from the tab bar.
-- **Configurable Options**: Customize your default prompt and behavior.
+  - Right-click any link to "Summarize link" (no need to open it first).
+  - Select text, right-click, and choose "Summarize selection".
+- **🤖 Smart Automation**:
+  - Automatically opens NotebookLM, imports content, and submits your default prompt (e.g., "TL;DR").
+- **📢 Visual Feedback**:
+  - **Toast Notifications**: Real-time status updates (Importing, Generating, Success).
+  - **Dynamic Tab Titles**: Monitor progress via emojis (⏳, ✨, ✅) directly on the tab bar.
+- **⚙️ Configurable**: Customize your default prompt and preferred tab focus behavior.
+- **🌍 Multilingual**: Support for 8 locales (English, Japanese, Chinese, French, German, Spanish, Portuguese).
 
-## Installation
+## 🛠️ Tech Stack
 
-### From Chrome Web Store (Recommended)
+- **Manifest V3**: The latest Chrome Extension standard.
+- **JavaScript (ES6+)**: Core logic and automation.
+- **Chrome Extension APIs**: `tabs`, `contextMenus`, `storage`, `runtime`, `i18n`.
+- **CSS3**: Modern, non-intrusive toast notifications.
 
-1. Visit the [Web TL;DR for NotebookLM](https://chromewebstore.google.com/detail/web-tldr-for-notebooklm-p/oidbefjbmllmbalkpccifpimlcmcjpkc) page in the Chrome Web Store.
+## 📂 Project Structure
+
+```text
+.
+├── _locales/               # i18n localization files (8 languages)
+├── assets/                 # Promotional images and GIFs
+├── icons/                  # Extension icons for various sizes
+├── background.js           # Background service worker (Context menus)
+├── controller.js           # Content script for NotebookLM automation
+├── manifest.json           # Extension configuration
+├── options.html/js         # Settings page
+├── PRIVACY.md              # Privacy Policy
+└── README.md               # You are here!
+```
+
+## 🧠 How it Works
+
+1. **Trigger**: User initiates a summary via icon or context menu.
+2. **Transfer**: The extension captures the URL or selected text and opens `notebooklm.google.com`.
+3. **Automation**: `controller.js` waits for the UI to be ready, injects the content, and submits the prompt.
+4. **Monitoring**: The extension tracks the generation status and updates the tab title and toast notifications accordingly.
+
+## 💾 Installation
+
+### Chrome Web Store (Recommended)
+
+1. Install from the [Chrome Web Store](https://chromewebstore.google.com/detail/web-tldr-for-notebooklm-p/oidbefjbmllmbalkpccifpimlcmcjpkc).
 2. Click **"Add to Chrome"**.
 
-### Developer Mode Installation (For Development)
+### Developer Mode
 
-1. Download or clone this repository to your local machine.
-2. Open Chrome and navigate to `chrome://extensions/`.
-3. Enable **"Developer mode"** by toggling the switch in the top-right corner.
-4. Click **"Load unpacked"** and select the directory containing the extension files.
-5. The extension should now appear in your Chrome toolbar.
+1. Clone this repository.
+2. Go to `chrome://extensions/` and enable **Developer mode**.
+3. Click **Load unpacked** and select this directory.
 
-## Usage
+## 🤝 Contributing
 
-### Summarize a Webpage
+Contributions are welcome! Whether it's a bug report, feature suggestion, or a pull request:
 
-1. Navigate to any webpage.
-2. Click the **Web TL;DR** extension icon in the toolbar, OR right-click the page and select **Summarize this page with NotebookLM**.
-3. A new tab will open, importing the page and generating the summary.
+1. **Fork** the repo.
+2. **Create** a feature branch (`git checkout -b feature/amazing-feature`).
+3. **Commit** your changes (`git commit -m 'feature: add amazing feature'`).
+4. **Push** to the branch (`git push origin feature/amazing-feature`).
+5. **Open** a Pull Request.
 
-### Summarize a Link
+## 🔒 Privacy
 
-1. Right-click on any link.
-2. Select **Summarize with NotebookLM**.
-3. The extension will pass the link to NotebookLM without you needing to visit it first.
+We value your privacy. This extension runs locally and **does not** collect, store, or transmit your data to any third parties other than Google NotebookLM itself. See [PRIVACY.md](./PRIVACY.md) for details.
 
-### Summarize Selected Text
+## 📜 License
 
-1. Highlight any text on a webpage.
-2. Right-click the selection.
-3. Select **Summarize with NotebookLM**.
-4. The selected text will be imported as a "Text" source in NotebookLM.
+Distributed under the MIT License. See [LICENSE](./LICENSE) for more information.
 
-## Configuration
+---
 
-Right-click the extension icon and select **Options** (or click "Extension Options" in `chrome://extensions`) to configure:
-
-- **Custom Prompt**: Change the default "TL;DR" prompt to anything you like (e.g., "Summarize in 3 bullet points").
-- **Open in Background**: Toggle whether the NotebookLM tab opens in the background or immediately grabs focus.
-
-## Privacy
-
-This extension:
-
-- **Only** accesses the specific URL or text you explicitly choose to summarize.
-- **Does not** collect, store, or transmit any personal data or browsing history to third parties (other than sending the user-initiated URL/Text to Google NotebookLM for processing).
-- Runs locally in your browser.
-
-## Requirements
-
-- Google Chrome browser.
-- A Google account with access to [NotebookLM](https://notebooklm.google.com/).
-
-## Troubleshooting
-
-- **Login**: Ensure you are logged into Google and can access NotebookLM.
-- **Prompt Issues**: If the automatic prompt fails, you can manually type in the NotebookLM chat.
-- **Permissions**: Verify the extension has the necessary permissions in `chrome://extensions`.
-
-## License
-
-MIT License. See the [LICENSE](./LICENSE) file for details.
+<p align="center">
+  If you find this project useful, please give it a ⭐ to show your support!
+</p>
