@@ -15,7 +15,7 @@
   "saveSettings": {"message": "儲存設定"},
   "settingsSaved": {"message": "已儲存設定。"},
   "brandPrefix": {"message": "Web TL;DR："},
-  "toastStarting": {"message": "正在開始摘要流程..."},
+  "toastStarting": {"message": "正在等待頁面載入..."},
   "errorUrlNotFound": {"message": "錯誤：找不到 URL。請再試一次。"},
   "toastOpeningAddSource": {"message": "正在開啟「新增來源」選單..."},
   "toastSelectingWebsite": {"message": "正在選取「網站」選項..."},

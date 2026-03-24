@@ -15,7 +15,7 @@
   "saveSettings": {"message": "Salvar configurações"},
   "settingsSaved": {"message": "Configurações salvas."},
   "brandPrefix": {"message": "Web TL;DR:"},
-  "toastStarting": {"message": "Iniciando o processo de resumo..."},
+  "toastStarting": {"message": "Aguardando o carregamento da página..."},
   "errorUrlNotFound": {"message": "Erro: URL não encontrada. Tente novamente."},
   "toastOpeningAddSource": {"message": "Web TL;DR: Abrindo o menu Adicionar fonte..."},
   "toastSelectingWebsite": {"message": "Web TL;DR: Selecionando a opção Site..."},

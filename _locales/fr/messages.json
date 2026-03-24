@@ -15,7 +15,7 @@
   "saveSettings": {"message": "Enregistrer les paramètres"},
   "settingsSaved": {"message": "Paramètres enregistrés."},
   "brandPrefix": {"message": "Web TL;DR :"},
-  "toastStarting": {"message": "Démarrage du processus de résumé…"},
+  "toastStarting": {"message": "En attente du chargement de la page..."},
   "errorUrlNotFound": {"message": "Erreur : URL introuvable. Veuillez réessayer."},
   "toastOpeningAddSource": {"message": "Ouverture du menu Ajouter une source…"},
   "toastSelectingWebsite": {"message": "Sélection de l'option Site Web…"},

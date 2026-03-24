@@ -562,10 +562,17 @@ async function importAndSummarizeSelectedText(selectedText, injectedTitle) {
       ? snippet.slice(0, 77) + '…'
       : snippet || i18n('titleSourceFallback', null, 'Page');
   showOverlay();
-  showToast(toastI18n('toastStarting', null, 'Starting summarization process...'));
+  showToast(toastI18n('toastStarting', null, 'Waiting for page to load...'));
   setNotebookTitle('loading');
 
   try {
+    // Wait for project loading spinner to disappear before opening the add source menu
+    let spinnerAttempts = 0;
+    while (document.querySelector('mat-progress-spinner') && spinnerAttempts < 60) {
+      await new Promise(r => setTimeout(r, 500));
+      spinnerAttempts++;
+    }
+
     updateToast(toastI18n('toastOpeningAddSource', null, 'Opening Add Source menu...'));
     /** @type {HTMLButtonElement} */
     const addSourceButton = await waitForElement('button:not([disabled]).create-new-button');
@@ -643,10 +650,17 @@ async function importAndSummarizeWebpage() {
 
   // Show overlay and initial toast ONLY after confirming we have work to do
   showOverlay();
-  showToast(toastI18n('toastStarting', null, 'Starting summarization process...'));
+  showToast(toastI18n('toastStarting', null, 'Waiting for page to load...'));
   setNotebookTitle('loading');
 
   try {
+    // Wait for project loading spinner to disappear before opening the add source menu
+    let spinnerAttempts = 0;
+    while (document.querySelector('mat-progress-spinner') && spinnerAttempts < 60) {
+      await new Promise(r => setTimeout(r, 500));
+      spinnerAttempts++;
+    }
+
     updateToast(toastI18n('toastOpeningAddSource', null, 'Opening Add Source menu...'));
 
     // Click the "+ Add Source" button
