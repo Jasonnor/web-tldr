@@ -574,17 +574,31 @@ async function importAndSummarizeSelectedText(selectedText, injectedTitle) {
     }
 
     updateToast(toastI18n('toastOpeningAddSource', null, 'Opening Add Source menu...'));
-    /** @type {HTMLButtonElement} */
-    const addSourceButton = await waitForElement('button:not([disabled]).create-new-button');
-    addSourceButton.click();
+    await waitForElement('button:not([disabled]).create-new-button, button:not([disabled]).add-source-button');
 
     // Select the "Text" option
     updateToast(toastI18n('toastSelectingText', null, 'Selecting Text option...'));
-    /** @type {HTMLButtonElement} */
-    const textOption = await waitForAnyElement([
+    let textOption = null;
+    const textPredicates = [
       () => document.querySelector('div.drop-zone-actions > button:nth-child(4)'),
       () => document.querySelector('#mat-mdc-chip-3'),
-    ]);
+      () => {
+        const el = Array.from(document.querySelectorAll('span')).find(e => ['Text', 'Copied text', '文字', '複製的文字'].includes(e.textContent.trim()) && e.offsetParent !== null);
+        return el ? (el.closest('button') || el) : null;
+      }
+    ];
+
+    // Robust retry logic: if the menu fails to appear (e.g. click was too fast), try clicking again
+    for (let i = 0; i < 5; i++) {
+      const btn = document.querySelector('button:not([disabled]).create-new-button, button:not([disabled]).add-source-button');
+      if (btn) btn.click();
+      
+      textOption = await waitForAnyElement(textPredicates, 2000);
+      if (textOption) break;
+      await new Promise(r => setTimeout(r, 500));
+    }
+
+    if (!textOption) throw new Error('Text option not found after retries');
     textOption.click();
 
     updateToast(
@@ -662,23 +676,30 @@ async function importAndSummarizeWebpage() {
     }
 
     updateToast(toastI18n('toastOpeningAddSource', null, 'Opening Add Source menu...'));
+    await waitForElement('button:not([disabled]).create-new-button, button:not([disabled]).add-source-button');
 
-    // Click the "+ Add Source" button
-    /** @type {HTMLButtonElement} */
-    const addSourceButton = await waitForElement('button:not([disabled]).create-new-button');
-    addSourceButton.click();
     updateToast(toastI18n('toastSelectingWebsite', null, 'Selecting Website option...'));
-
-    // Click the "Website" option from the menu
-    /** @type {HTMLButtonElement} */
-    const websiteOption = await waitForAnyElement([
+    let websiteOption = null;
+    const websitePredicates = [
       () => document.querySelector('div.drop-zone-actions > button:nth-child(2)'),
       () => document.querySelector('#mat-mdc-chip-1'),
-      () =>
-        Array.from(document.querySelectorAll('span')).find(
-          (el) => el.textContent.trim() === 'Website' && el.offsetParent !== null
-        ),
-    ]);
+      () => {
+        const el = Array.from(document.querySelectorAll('span')).find(e => ['Website', '網頁', 'Link', '連結'].includes(e.textContent.trim()) && e.offsetParent !== null);
+        return el ? (el.closest('button') || el) : null;
+      }
+    ];
+
+    // Robust retry logic: if the menu fails to appear (e.g. click was too fast), try clicking again
+    for (let i = 0; i < 5; i++) {
+      const btn = document.querySelector('button:not([disabled]).create-new-button, button:not([disabled]).add-source-button');
+      if (btn) btn.click();
+      
+      websiteOption = await waitForAnyElement(websitePredicates, 2000);
+      if (websiteOption) break;
+      await new Promise(r => setTimeout(r, 500));
+    }
+
+    if (!websiteOption) throw new Error('Website option not found after retries');
     websiteOption.click();
     updateToast(
       toastI18n(
