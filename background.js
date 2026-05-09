@@ -1,29 +1,58 @@
-async function launchSummarization(urlToSummarize, sourceTab, linkText = null) {
+async function launchSummarization(urlToSummarize, sourceTab, linkText = null, selectedTextToSummarize = null, selectedTextSourceTitle = null) {
   try {
     if (!urlToSummarize || urlToSummarize.startsWith('chrome://')) {
       console.error('Invalid URL for summarization.');
       return;
     }
-    await chrome.storage.local.set({
-      urlToSummarize: urlToSummarize,
-      sourceTitle: linkText || sourceTab?.title || null,
-    });
 
     // Read user preference for opening in the background (default: false)
     const { openInBackground = false } = await chrome.storage.local.get({ openInBackground: false });
 
     // Open NotebookLM in a new tab, immediately to the right of the current tab
-    await chrome.tabs.create({
+    const newTab = await chrome.tabs.create({
       url: 'https://notebooklm.google.com/',
       index: typeof sourceTab?.index === 'number' ? sourceTab.index + 1 : undefined,
       windowId: sourceTab?.windowId,
       openerTabId: sourceTab?.id,
       active: !openInBackground,
     });
+
+    // Store the task specifically for this tab to prevent triggering on manual visits
+    await chrome.storage.local.set({
+      [`web_tldr_task_${newTab.id}`]: {
+        urlToSummarize,
+        sourceTitle: linkText || sourceTab?.title || null,
+        selectedTextToSummarize,
+        selectedTextSourceTitle,
+        timestamp: Date.now()
+      }
+    });
   } catch (error) {
     console.error('[Web TL;DR for NotebookLM - background] An error occurred: ', error);
   }
 }
+
+// Cleanup task when a tab is closed
+chrome.tabs.onRemoved.addListener((tabId) => {
+  chrome.storage.local.remove(`web_tldr_task_${tabId}`);
+});
+
+// Handle requests from content script
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (!sender.tab?.id) return;
+  const tabId = sender.tab.id;
+  const storageKey = `web_tldr_task_${tabId}`;
+
+  if (message.action === 'getTask') {
+    chrome.storage.local.get(storageKey).then(data => {
+      sendResponse(data[storageKey] || null);
+    });
+    return true; // Keep channel open for async response
+  } else if (message.action === 'clearTask') {
+    chrome.storage.local.remove(storageKey);
+    sendResponse({ success: true });
+  }
+});
 
 // Toolbar button click
 chrome.action.onClicked.addListener(async (tab) => {
@@ -73,12 +102,9 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
         // Store the selected text so the controller can add it as a Text source
         const snippet = info.selectionText.trim();
         if (snippet) {
-          await chrome.storage.local.set({
-            selectedTextToSummarize: snippet,
-            selectedTextSourceTitle: snippet.length > 80 ? snippet.slice(0, 77) + '…' : snippet,
-          });
+          const selectedTextSourceTitle = snippet.length > 80 ? snippet.slice(0, 77) + '…' : snippet;
           const targetUrl = info.pageUrl || tab?.url;
-          await launchSummarization(targetUrl, tab, snippet);
+          await launchSummarization(targetUrl, tab, null, snippet, selectedTextSourceTitle);
         }
       }
     }

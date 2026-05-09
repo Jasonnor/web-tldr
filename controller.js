@@ -484,10 +484,10 @@ async function handlePromptAndGenerate(targetUrl = null) {
       console.log('[Web TL;DR] Detected source import failure:', resultElement);
       
       try {
-        await chrome.storage.local.remove(['urlToSummarize', 'sourceTitle']);
-        console.log('[Web TL;DR] Cleared storage due to error.');
+        await chrome.runtime.sendMessage({ action: 'clearTask' });
+        console.log('[Web TL;DR] Cleared task due to error.');
       } catch (e) {
-        console.error('[Web TL;DR] Failed to clear storage:', e);
+        console.error('[Web TL;DR] Failed to clear task:', e);
       }
 
       updateToast(toastI18n('toastImportFailed', null, 'Failed to import source. Please check the URL and try again.'), 'error');
@@ -622,11 +622,11 @@ async function importAndSummarizeSelectedText(selectedText, injectedTitle) {
     ]);
     importButton.click();
 
-    // Clear storage keys if present
+    // Clear task after importing
     try {
-      await chrome.storage.local.remove(['selectedTextToSummarize', 'selectedTextSourceTitle']);
+      await chrome.runtime.sendMessage({ action: 'clearTask' });
     } catch (err) {
-      console.error('Error clearing storage keys:', err);
+      console.error('Error clearing task:', err);
     }
 
     await handlePromptAndGenerate();
@@ -639,10 +639,10 @@ async function importAndSummarizeSelectedText(selectedText, injectedTitle) {
   }
 }
 
-async function importAndSummarizeWebpage() {
-  // Prefer URL passed via injected variable to avoid race conditions; fall back to storage for backward compatibility
-  let url = globalThis?.__web_tldr_url;
-  let sourceTitle = globalThis?.__web_tldr_source_title;
+async function importAndSummarizeWebpage(passedUrl, passedSourceTitle) {
+  // Prefer URL passed via arguments or injected variable
+  let url = passedUrl || globalThis?.__web_tldr_url;
+  let sourceTitle = passedSourceTitle || globalThis?.__web_tldr_source_title;
 
   if (!url) {
     try {
@@ -723,14 +723,11 @@ async function importAndSummarizeWebpage() {
     ]);
     importButton.click();
 
-    // Clean up a legacy storage key only if it matches our URL (backward compatibility)
+    // Clear task after importing
     try {
-      const existing = await chrome.storage.local.get(['urlToSummarize', 'sourceTitle']);
-      if (existing && existing.urlToSummarize === url) {
-        await chrome.storage.local.remove(['urlToSummarize', 'sourceTitle']);
-      }
+      await chrome.runtime.sendMessage({ action: 'clearTask' });
     } catch (err) {
-      console.error('Error cleaning up legacy storage key:', err);
+      console.error('Error clearing task:', err);
     }
 
     await handlePromptAndGenerate(url);
@@ -745,19 +742,43 @@ async function importAndSummarizeWebpage() {
 
 async function __webTldrStart() {
   try {
-    const { selectedTextToSummarize = null, selectedTextSourceTitle = null } = await chrome.storage.local.get({
-      selectedTextToSummarize: null,
-      selectedTextSourceTitle: null,
-    });
+    const task = await chrome.runtime.sendMessage({ action: 'getTask' }).catch(() => null);
+    
+    // Legacy fallback just in case there's old storage data hanging around
+    const legacyData = await chrome.storage.local.get([
+      'selectedTextToSummarize', 
+      'selectedTextSourceTitle', 
+      'urlToSummarize', 
+      'sourceTitle'
+    ]);
+    
+    // If we only have legacy data, it's likely a manual visit finding old data.
+    // We should clear it and NOT run to prevent the bug.
+    if (!task && (legacyData.selectedTextToSummarize || legacyData.urlToSummarize)) {
+      await chrome.storage.local.remove([
+        'selectedTextToSummarize', 
+        'selectedTextSourceTitle', 
+        'urlToSummarize', 
+        'sourceTitle'
+      ]);
+      return; // Do not proceed for manual visits
+    }
+
+    const selectedTextToSummarize = task?.selectedTextToSummarize || null;
+    const selectedTextSourceTitle = task?.selectedTextSourceTitle || null;
+    const urlToSummarize = task?.urlToSummarize || null;
+    const sourceTitle = task?.sourceTitle || null;
+
     if (selectedTextToSummarize?.trim()) {
       const injectedTitle = globalThis?.__web_tldr_source_title || selectedTextSourceTitle;
       await importAndSummarizeSelectedText(selectedTextToSummarize, injectedTitle);
-    } else {
+    } else if (urlToSummarize) {
+      await importAndSummarizeWebpage(urlToSummarize, sourceTitle);
+    } else if (globalThis?.__web_tldr_url) {
       await importAndSummarizeWebpage();
     }
   } catch (e) {
-    console.error('[Web TL;DR for NotebookLM - controller] Start failed, falling back to URL flow', e);
-    await importAndSummarizeWebpage();
+    console.error('[Web TL;DR for NotebookLM - controller] Start failed', e);
   }
 }
 
