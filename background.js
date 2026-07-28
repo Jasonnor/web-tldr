@@ -10,7 +10,7 @@ async function launchSummarization(urlToSummarize, sourceTab, linkText = null, s
 
     // Open NotebookLM in a new tab, immediately to the right of the current tab
     const newTab = await chrome.tabs.create({
-      url: 'https://notebooklm.google.com/',
+      url: 'https://notebook.google.com/',
       index: typeof sourceTab?.index === 'number' ? sourceTab.index + 1 : undefined,
       windowId: sourceTab?.windowId,
       openerTabId: sourceTab?.id,

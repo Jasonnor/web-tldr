@@ -17,7 +17,7 @@ The extension only processes data when you explicitly trigger an action (e.g., c
 * **URLs and Page Titles**: Used to direct Google NotebookLM to the content you wish to summarize.
 * **Selected Text**: If you choose to summarize a text selection, that specific text is temporarily copied to your clipboard or passed directly to the NotebookLM interface.
 
-This data is strictly transmitted directly from your browser to **Google NotebookLM** (`https://notebooklm.google.com`) to perform the requested summarization. We do not have access to this data.
+This data is strictly transmitted directly from your browser to **Google NotebookLM** (`https://notebook.google.com`) to perform the requested summarization. We do not have access to this data.
 
 ## 2. Permissions
 
@@ -26,7 +26,7 @@ We only request permissions that are essential for the extension's functionality
 * **`activeTab`**: To access the URL and title of the current tab only when you click the extension icon.
 * **`contextMenus`**: To add "Summarize" options to your right-click menu.
 * **`storage`**: To save your local preferences (e.g., your custom prompt or background tab settings). These settings are stored locally in your Chrome browser and are not synced to us.
-* **Site Access (`notebooklm.google.com`)**: To automate the process of pasting content and submitting prompts within the NotebookLM interface.
+* **Site Access (`notebook.google.com`)**: To automate the process of pasting content and submitting prompts within the NotebookLM interface.
 
 ## 3. Third-Party Services
 
