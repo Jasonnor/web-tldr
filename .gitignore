@@ -6,3 +6,8 @@
 .DS_Store
 .AppleDouble
 .LSOverride
+
+# Local files
+AGENTS.md
+temp/
+docs/
