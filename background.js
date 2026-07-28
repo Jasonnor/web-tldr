@@ -69,7 +69,7 @@ chrome.runtime.onInstalled.addListener(() => {
         /** @type {chrome.contextMenus.CreateProperties} */
         {
           id: 'web-tldr-summarize-page',
-          title: chrome.i18n.getMessage('ctxSummarizePage') || 'Summarize this page with NotebookLM',
+          title: chrome.i18n.getMessage('ctxSummarizePage') || 'Summarize this page with Gemini Notebook',
           contexts: ['page'],
         }
       );
@@ -78,7 +78,7 @@ chrome.runtime.onInstalled.addListener(() => {
         /** @type {chrome.contextMenus.CreateProperties} */
         {
           id: 'web-tldr-summarize-link-or-selection',
-          title: chrome.i18n.getMessage('ctxSummarizeLinkOrSelection') || 'Summarize with NotebookLM',
+          title: chrome.i18n.getMessage('ctxSummarizeLinkOrSelection') || 'Summarize with Gemini Notebook',
           contexts: ['link', 'selection'],
         }
       );

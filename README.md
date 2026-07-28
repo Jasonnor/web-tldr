@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/locales-8-orange" alt="Locales: 8">
 </p>
 
-A powerful Chrome extension that seamlessly integrates [Google NotebookLM](https://notebook.google.com) into your browsing workflow. Instantly summarize webpages, specific links, or selected text with a single click and smart automation.
+A powerful Chrome extension that seamlessly integrates [Gemini Notebook](https://notebook.google.com) into your browsing workflow. Instantly summarize webpages, specific links, or selected text with a single click and smart automation.
 
 ---
 
@@ -38,7 +38,7 @@ A powerful Chrome extension that seamlessly integrates [Google NotebookLM](https
   - Right-click any link to "Summarize link" (no need to open it first).
   - Select text, right-click, and choose "Summarize selection".
 - **🤖 Smart Automation**:
-  - Automatically opens NotebookLM, imports content, and submits your default prompt (e.g., "TL;DR").
+  - Automatically opens Gemini Notebook, imports content, and submits your default prompt (e.g., "TL;DR").
 - **📢 Visual Feedback**:
   - **Toast Notifications**: Real-time status updates (Importing, Generating, Success).
   - **Dynamic Tab Titles**: Monitor progress via emojis (⏳, ✨, ✅) directly on the tab bar.
@@ -60,7 +60,7 @@ A powerful Chrome extension that seamlessly integrates [Google NotebookLM](https
 ├── assets/                 # Promotional images and GIFs
 ├── icons/                  # Extension icons for various sizes
 ├── background.js           # Background service worker (Context menus)
-├── controller.js           # Content script for NotebookLM automation
+├── controller.js           # Content script for Gemini Notebook automation
 ├── manifest.json           # Extension configuration
 ├── options.html/js         # Settings page
 ├── PRIVACY.md              # Privacy Policy
@@ -99,7 +99,7 @@ Contributions are welcome! Whether it's a bug report, feature suggestion, or a p
 
 ## 🔒 Privacy
 
-We value your privacy. This extension runs locally and **does not** collect, store, or transmit your data to any third parties other than Google NotebookLM itself. See [PRIVACY.md](./PRIVACY.md) for details.
+We value your privacy. This extension runs locally and **does not** collect, store, or transmit your data to any third parties other than Gemini Notebook itself. See [PRIVACY.md](./PRIVACY.md) for details.
 
 ## 📜 License
 

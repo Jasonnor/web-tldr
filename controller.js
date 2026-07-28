@@ -362,6 +362,21 @@ function waitForElement(selector, timeout = 10000) {
   return waitForAnyElement([() => document.querySelector(selector)], timeout);
 }
 
+function findSourceOption(labels, iconName) {
+  const label = Array.from(document.querySelectorAll('span'))
+    .find((span) => labels.includes(span.textContent.trim()) && span.offsetParent !== null);
+  if (label) return label.closest('button') || label;
+
+  const buttons = Array.from(document.querySelectorAll('div.drop-zone-actions > button'));
+
+  return buttons.find((button) => {
+    if (button.offsetParent === null) return false;
+
+    return Array.from(button.querySelectorAll('mat-icon'))
+      .some((icon) => icon.textContent.trim() === iconName);
+  }) || null;
+}
+
 /**
  * Wait until the Notebook title (h1.notebook-title) changes from a given initial value.
  * Falls back to timeout if it doesn't change in time.
@@ -433,7 +448,7 @@ function setNotebookTitle(status) {
   const emoji = emojis[status] || '';
   const source = __webTldrSourceTitle || i18n('titleSourceFallback', null, 'Page');
   // Keep the NotebookLM brand last so multiple tabs group nicely by source
-  const brand = i18n('brandNotebookLM', null, 'NotebookLM');
+  const brand = i18n('brandNotebookLM', null, 'Gemini Notebook');
   document.title = `${emoji} ${source} – ${brand}`;
 }
 
@@ -582,10 +597,10 @@ async function importAndSummarizeSelectedText(selectedText, injectedTitle) {
     const textPredicates = [
       () => document.querySelector('div.drop-zone-actions > button:nth-child(4)'),
       () => document.querySelector('#mat-mdc-chip-3'),
-      () => {
-        const el = Array.from(document.querySelectorAll('span')).find(e => ['Text', 'Copied text', '文字', '複製的文字'].includes(e.textContent.trim()) && e.offsetParent !== null);
-        return el ? (el.closest('button') || el) : null;
-      }
+      () => findSourceOption(
+        ['Text', 'Copied text', '文字', '複製的文字'],
+        'content_paste'
+      ),
     ];
 
     // Robust retry logic: if the menu fails to appear (e.g. click was too fast), try clicking again
@@ -683,10 +698,10 @@ async function importAndSummarizeWebpage(passedUrl, passedSourceTitle) {
     const websitePredicates = [
       () => document.querySelector('div.drop-zone-actions > button:nth-child(2)'),
       () => document.querySelector('#mat-mdc-chip-1'),
-      () => {
-        const el = Array.from(document.querySelectorAll('span')).find(e => ['Website', '網頁', 'Link', '連結'].includes(e.textContent.trim()) && e.offsetParent !== null);
-        return el ? (el.closest('button') || el) : null;
-      }
+      () => findSourceOption(
+        ['Website', '網頁', 'Link', '連結', '網站'],
+        'link'
+      ),
     ];
 
     // Robust retry logic: if the menu fails to appear (e.g. click was too fast), try clicking again
@@ -782,7 +797,13 @@ async function __webTldrStart() {
   }
 }
 
-setTimeout(__webTldrStart, 0);
+if (typeof chrome !== 'undefined') {
+  setTimeout(__webTldrStart, 0);
+}
+
+if (typeof module !== 'undefined') {
+  module.exports = { findSourceOption };
+}
 
 /**
  * Wait for an element to first appear, then disappear.
