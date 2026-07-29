@@ -22,7 +22,8 @@
   "content_scripts": [
     {
       "matches": [
-        "https://notebook.google.com/*"
+        "https://notebook.google.com/*",
+        "https://notebooklm.google.com/*"
       ],
       "js": [
         "controller.js"
@@ -30,7 +31,8 @@
     }
   ],
   "host_permissions": [
-    "https://notebook.google.com/"
+    "https://notebook.google.com/",
+    "https://notebooklm.google.com/"
   ],
   "icons": {
     "16": "icons/icon16.png",

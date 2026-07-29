@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/locales-8-orange" alt="Locales: 8">
 </p>
 
-A powerful Chrome extension that seamlessly integrates [Gemini Notebook](https://notebook.google.com) into your browsing workflow. Instantly summarize webpages, specific links, or selected text with a single click and smart automation.
+A powerful Chrome extension that seamlessly integrates [Gemini Notebook](https://notebook.google.com) into your browsing workflow across both `notebook.google.com` and `notebooklm.google.com`. Instantly summarize webpages, specific links, or selected text with a single click and smart automation.
 
 ---
 
@@ -70,7 +70,7 @@ A powerful Chrome extension that seamlessly integrates [Gemini Notebook](https:/
 ## 🧠 How it Works
 
 1. **Trigger**: User initiates a summary via icon or context menu.
-2. **Transfer**: The extension captures the URL or selected text and opens `notebook.google.com`.
+2. **Transfer**: The extension captures the URL or selected text and opens `notebook.google.com`; automation continues if Google serves the user from `notebooklm.google.com`.
 3. **Automation**: `controller.js` waits for the UI to be ready, injects the content, and submits the prompt.
 4. **Monitoring**: The extension tracks the generation status and updates the tab title and toast notifications accordingly.
 
