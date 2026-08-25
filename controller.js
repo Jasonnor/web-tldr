@@ -145,20 +145,9 @@ function showToast(message, iconType = 'spinner') {
 /**
  * Updates the message in an existing toast
  * @param {string} message - The new message to display
- * @param {string|null} iconType - Optional icon type to update ('spinner', 'success', 'error', or 'none')
+ * @param {string} iconType - Icon type to show ('spinner', 'success', 'error', or 'none')
  */
-function updateToast(message, iconType = null) {
-  // Check if the message indicates a success or error to automatically set the icon type
-  if (iconType === null) {
-    if (message.includes('successfully')) {
-      iconType = 'success';
-    } else if (message.includes('error') || message.includes('Error')) {
-      iconType = 'error';
-    } else {
-      iconType = 'spinner';
-    }
-  }
-
+function updateToast(message, iconType = 'spinner') {
   if (!toastElement) {
     showToast(message, iconType);
     return;
@@ -557,12 +546,12 @@ async function handlePromptAndGenerate(targetUrl = null) {
       console.error('Loading indicator not found:', err);
     }
 
-    updateToast(toastI18n('toastSummarySuccess', null, 'Summary generated successfully!'));
+    updateToast(toastI18n('toastSummarySuccess', null, 'Summary generated successfully!'), 'success');
     setNotebookTitle('success');
     removeToast(2000);
     removeOverlay();
   } else {
-    updateToast(toastI18n('toastImportSuccess', null, 'Page imported successfully!'));
+    updateToast(toastI18n('toastImportSuccess', null, 'Page imported successfully!'), 'success');
     setNotebookTitle('success');
     removeToast(2000);
     removeOverlay();
@@ -647,7 +636,7 @@ async function importAndSummarizeSelectedText(selectedText, injectedTitle) {
     await handlePromptAndGenerate();
   } catch (error) {
     console.error('[Web TL;DR for NotebookLM - controller] Text flow error:', error);
-    updateToast(toastI18n('toastGenericError', null, 'An error occurred. Please try again.'));
+    updateToast(toastI18n('toastGenericError', null, 'An error occurred. Please try again.'), 'error');
     setNotebookTitle('error');
     removeToast(5000);
     removeOverlay();
@@ -748,7 +737,7 @@ async function importAndSummarizeWebpage(passedUrl, passedSourceTitle) {
     await handlePromptAndGenerate(url);
   } catch (error) {
     console.error('[Web TL;DR for NotebookLM - controller] An error occurred:', error);
-    updateToast(toastI18n('toastGenericError', null, 'An error occurred. Please try again.'));
+    updateToast(toastI18n('toastGenericError', null, 'An error occurred. Please try again.'), 'error');
     setNotebookTitle('error');
     removeToast(5000);
     removeOverlay();
