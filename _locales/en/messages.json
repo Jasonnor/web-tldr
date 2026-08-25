@@ -19,10 +19,10 @@
   "errorUrlNotFound": {"message": "Error: URL not found. Please try again."},
   "toastOpeningAddSource": {"message": "Opening Add Source menu..."},
   "toastSelectingWebsite": {"message": "Selecting Website option..."},
-  "toastAddingUrl": {"message": "Adding URL: $URL$", "placeholders": {"url": {"content": "$1"}}},
+  "toastAddingUrl": {"message": "Adding URL..."},
   "toastImporting": {"message": "Importing webpage..."},
   "toastWaitingLoad": {"message": "Waiting for page to load..."},
-  "toastEnteringPrompt": {"message": "Entering \"$PROMPT$\" prompt...", "placeholders": {"prompt": {"content": "$1"}}},
+  "toastEnteringPrompt": {"message": "Entering prompt..."},
   "toastGenerating": {"message": "Generating summary..."},
   "toastSummarySuccess": {"message": "Summary generated successfully!"},
   "toastImportSuccess": {"message": "Page imported successfully!"},
@@ -31,5 +31,5 @@
   "titleSourceFallback": {"message": "Page"},
   "brandNotebookLM": {"message": "Gemini Notebook"},
   "toastSelectingText": {"message": "Selecting Text option..."},
-  "toastAddingText": {"message": "Adding selected text: $TEXT$", "placeholders": {"text": {"content": "$1"}}}
+  "toastAddingText": {"message": "Adding selected text..."}
 }

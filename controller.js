@@ -26,12 +26,53 @@ function toastI18n(key, subs, fallback = '') {
 let toastElement = null;
 let overlayElement = null;
 
+// Guards against huge payloads reaching the DOM; the line clamp is what bounds the visible height
+const TOAST_DETAIL_MAX_LENGTH = 120;
+
+/**
+ * Renders the secondary detail line of a toast, clamped to two lines with the full text on hover
+ * @param {HTMLElement} body - The toast body column
+ * @param {string} detail - The detail text, or an empty value to remove the line
+ */
+function setToastDetail(body, detail) {
+  const existing = body.querySelector('#web-tldr-toast-detail');
+  if (!detail) {
+    existing?.remove();
+    return;
+  }
+
+  const element = existing ?? document.createElement('div');
+  if (!existing) {
+    element.id = 'web-tldr-toast-detail';
+    Object.assign(element.style, {
+      marginTop: '6px',
+      padding: '4px 8px',
+      borderRadius: '6px',
+      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      color: 'rgba(255, 255, 255, 0.72)',
+      fontSize: '12px',
+      lineHeight: '1.4',
+      display: '-webkit-box',
+      WebkitBoxOrient: 'vertical',
+      WebkitLineClamp: '2',
+      overflow: 'hidden',
+      wordBreak: 'break-word',
+    });
+    body.appendChild(element);
+  }
+
+  element.textContent =
+    detail.length > TOAST_DETAIL_MAX_LENGTH ? `${detail.slice(0, TOAST_DETAIL_MAX_LENGTH - 1)}…` : detail;
+  element.title = detail;
+}
+
 /**
  * Creates and shows a toast notification
  * @param {string} message - The message to display in the toast
  * @param {string} iconType - The type of icon to show: 'spinner', 'success', 'error', or 'none'
+ * @param {string} detail - Optional detail text shown on its own clamped line
  */
-function showToast(message, iconType = 'spinner') {
+function showToast(message, iconType = 'spinner', detail = '') {
   // Remove existing toast if present
   if (toastElement?.parentNode) {
     toastElement.remove();
@@ -56,14 +97,18 @@ function showToast(message, iconType = 'spinner') {
     fontSize: '14px',
     maxWidth: '300px',
     display: 'flex',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     transition: 'opacity 0.3s ease-in-out',
     opacity: '0',
   });
 
-  // Create a message element
+  // Stack the message and the optional detail line in a column beside the icon
+  const body = document.createElement('div');
+  body.style.minWidth = '0';
+
   const messageElement = document.createElement('span');
   messageElement.textContent = message;
+  body.appendChild(messageElement);
 
   // Add icon based on iconType
   if (iconType !== 'none') {
@@ -127,11 +172,13 @@ function showToast(message, iconType = 'spinner') {
             `;
     }
 
+    Object.assign(icon.style, { marginTop: '2px', flex: 'none' });
     toastElement.appendChild(icon);
   }
 
   // Add a message to toast
-  toastElement.appendChild(messageElement);
+  toastElement.appendChild(body);
+  setToastDetail(body, detail);
 
   // Add toast to the body
   document.body.appendChild(toastElement);
@@ -146,16 +193,18 @@ function showToast(message, iconType = 'spinner') {
  * Updates the message in an existing toast
  * @param {string} message - The new message to display
  * @param {string} iconType - Icon type to show ('spinner', 'success', 'error', or 'none')
+ * @param {string} detail - Optional detail text; an empty value clears the existing detail line
  */
-function updateToast(message, iconType = 'spinner') {
+function updateToast(message, iconType = 'spinner', detail = '') {
   if (!toastElement) {
-    showToast(message, iconType);
+    showToast(message, iconType, detail);
     return;
   }
   // Update message text
   const messageElement = toastElement.querySelector('span');
   if (messageElement) {
     messageElement.textContent = message;
+    setToastDetail(messageElement.parentElement, detail);
   }
 
   // Update icon if iconType is provided
@@ -208,7 +257,8 @@ function updateToast(message, iconType = 'spinner') {
                 </svg>
             `;
   }
-  messageElement.before(icon);
+  Object.assign(icon.style, { marginTop: '2px', flex: 'none' });
+  toastElement.prepend(icon);
 }
 
 /**
@@ -463,7 +513,7 @@ async function handlePromptAndGenerate(targetUrl = null) {
     const promptData = await chrome.storage.local.get({ promptText: i18n('promptDefault', null, 'TL;DR') });
     const promptText = promptData.promptText;
 
-    updateToast(toastI18n('toastEnteringPrompt', [promptText], `Entering "${promptText}" prompt...`));
+    updateToast(toastI18n('toastEnteringPrompt', null, 'Entering prompt...'), 'spinner', promptText);
     promptTextarea.value = promptText;
     promptTextarea.dispatchEvent(new Event('input', { bubbles: true }));
 
@@ -605,13 +655,7 @@ async function importAndSummarizeSelectedText(selectedText, injectedTitle) {
     if (!textOption) throw new Error('Text option not found after retries');
     textOption.click();
 
-    updateToast(
-      toastI18n(
-        'toastAddingText',
-        [snippet.length > 30 ? snippet.slice(0, 27) + '…' : snippet],
-        'Adding selected text...'
-      )
-    );
+    updateToast(toastI18n('toastAddingText', null, 'Adding selected text...'), 'spinner', selectedText);
     const textInput = await waitForAnyElement([
       () => document.querySelector('textarea[formcontrolname="copiedText"]'),
       () => document.querySelector('textarea[formcontrolname="text"]'),
@@ -705,13 +749,7 @@ async function importAndSummarizeWebpage(passedUrl, passedSourceTitle) {
 
     if (!websiteOption) throw new Error('Website option not found after retries');
     websiteOption.click();
-    updateToast(
-      toastI18n(
-        'toastAddingUrl',
-        [`${url.substring(0, 30)}${url.length > 30 ? '...' : ''}`],
-        `Adding URL: ${url.substring(0, 30)}${url.length > 30 ? '...' : ''}`
-      )
-    );
+    updateToast(toastI18n('toastAddingUrl', null, 'Adding URL...'), 'spinner', url);
 
     // Find the input, paste the URL, and click import
     const urlInput = await waitForAnyElement([
@@ -791,7 +829,7 @@ if (typeof chrome !== 'undefined') {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { findSourceOption };
+  module.exports = { findSourceOption, setToastDetail, TOAST_DETAIL_MAX_LENGTH };
 }
 
 /**

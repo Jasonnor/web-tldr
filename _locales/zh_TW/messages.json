@@ -19,10 +19,10 @@
   "errorUrlNotFound": {"message": "錯誤：找不到 URL。請再試一次。"},
   "toastOpeningAddSource": {"message": "正在開啟「新增來源」選單..."},
   "toastSelectingWebsite": {"message": "正在選取「網站」選項..."},
-  "toastAddingUrl": {"message": "正在新增網址：$URL$", "placeholders": {"url": {"content": "$1"}}},
+  "toastAddingUrl": {"message": "正在新增網址..."},
   "toastImporting": {"message": "正在匯入網頁..."},
   "toastWaitingLoad": {"message": "正在等待頁面載入..."},
-  "toastEnteringPrompt": {"message": "正在輸入「$PROMPT$」提示...", "placeholders": {"prompt": {"content": "$1"}}},
+  "toastEnteringPrompt": {"message": "正在輸入提示..."},
   "toastGenerating": {"message": "正在產生摘要..."},
   "toastSummarySuccess": {"message": "已成功產生摘要！"},
   "toastImportSuccess": {"message": "已成功匯入頁面！"},
@@ -31,5 +31,5 @@
   "titleSourceFallback": {"message": "頁面"},
   "brandNotebookLM": {"message": "Gemini Notebook"},
   "toastSelectingText": {"message": "正在選取「文字」選項..."},
-  "toastAddingText": {"message": "正在新增所選文字：$TEXT$", "placeholders": {"text": {"content": "$1"}}}
+  "toastAddingText": {"message": "正在新增所選文字..."}
 }

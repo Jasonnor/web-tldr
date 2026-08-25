@@ -19,10 +19,10 @@
   "errorUrlNotFound": {"message": "エラー: URL が見つかりません。もう一度お試しください。"},
   "toastOpeningAddSource": {"message": "「ソースを追加」メニューを開いています..."},
   "toastSelectingWebsite": {"message": "「ウェブサイト」オプションを選択しています..."},
-  "toastAddingUrl": {"message": "URL を追加中: $URL$", "placeholders": {"url": {"content": "$1"}}},
+  "toastAddingUrl": {"message": "URL を追加しています..."},
   "toastImporting": {"message": "ウェブページをインポートしています..."},
   "toastWaitingLoad": {"message": "ページの読み込みを待っています..."},
-  "toastEnteringPrompt": {"message": "「$PROMPT$」プロンプトを入力しています...", "placeholders": {"prompt": {"content": "$1"}}},
+  "toastEnteringPrompt": {"message": "プロンプトを入力しています..."},
   "toastGenerating": {"message": "要約を生成しています..."},
   "toastSummarySuccess": {"message": "要約が正常に生成されました！"},
   "toastImportSuccess": {"message": "ページを正常にインポートしました！"},
@@ -31,5 +31,5 @@
   "titleSourceFallback": {"message": "ページ"},
   "brandNotebookLM": {"message": "Gemini Notebook"},
   "toastSelectingText": {"message": "「テキスト」オプションを選択しています..."},
-  "toastAddingText": {"message": "選択したテキストを追加中: $TEXT$", "placeholders": {"text": {"content": "$1"}}}
+  "toastAddingText": {"message": "選択したテキストを追加しています..."}
 }
