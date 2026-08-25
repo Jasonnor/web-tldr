@@ -9,6 +9,9 @@
 
 # Local files
 AGENTS.md
+CLAUDE.md
+.cursor/
+.claude/
 temp/
 docs/
 dist/
