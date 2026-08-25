@@ -589,11 +589,11 @@ async function handlePromptAndGenerate(targetUrl = null) {
       await new Promise((resolve) => setTimeout(resolve, 500));
     }
 
-    // Wait for the loading indicator to appear and then disappear before announcing success
+    // Wait until the reply has finished streaming before announcing success
     try {
-      await waitForAppearanceThenDisappearance('div > div.thinking-animation', 60000, 300000);
+      await waitForChatResponseCompletion();
     } catch (err) {
-      console.error('Loading indicator not found:', err);
+      console.error('Chat response completion not detected:', err);
     }
 
     updateToast(toastI18n('toastSummarySuccess', null, 'Summary generated successfully!'), 'success');
@@ -829,7 +829,7 @@ if (typeof chrome !== 'undefined') {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { findSourceOption, setToastDetail, TOAST_DETAIL_MAX_LENGTH };
+  module.exports = { findSourceOption, isChatResponseComplete, setToastDetail, TOAST_DETAIL_MAX_LENGTH };
 }
 
 /**
@@ -898,4 +898,49 @@ async function waitForAppearanceThenDisappearance(selector, appearTimeout = 6000
     console.warn('[Web TL;DR] waitForAppearanceThenDisappearance failed', e);
     return false;
   }
+}
+
+// NotebookLM keeps these markers on a reply while the model is still thinking
+const CHAT_IN_PROGRESS_SELECTOR = '.thinking-chain--in-progress, .thinking-chain__title.is-loading, .thinking-animation';
+
+// The action bar is only rendered once the reply has finished streaming
+const CHAT_MESSAGE_ACTIONS_SELECTOR = 'mat-card-actions.message-actions';
+
+/**
+ * Check whether the newest chat reply has finished.
+ * Relies on structure rather than the thinking chain label, which is generated text.
+ * @returns {boolean}
+ */
+function isChatResponseComplete() {
+  const messages = document.querySelectorAll('chat-message');
+  const latest = messages[messages.length - 1];
+  if (!latest) return false;
+  if (latest.querySelector(CHAT_IN_PROGRESS_SELECTOR)) return false;
+  return Boolean(latest.querySelector(CHAT_MESSAGE_ACTIONS_SELECTOR));
+}
+
+/**
+ * Wait until the newest chat reply is complete.
+ * @param {number} timeout Milliseconds to wait before giving up
+ * @returns {Promise<boolean>} true once the reply is complete, false on timeout but continues
+ */
+function waitForChatResponseCompletion(timeout = 300000) {
+  return new Promise((resolve) => {
+    const start = Date.now();
+    const pollInterval = setInterval(() => {
+      if (isChatResponseComplete()) {
+        clearInterval(pollInterval);
+        resolve(true);
+        return;
+      }
+
+      if (Date.now() - start >= timeout) {
+        clearInterval(pollInterval);
+        console.log(
+          `[Web TL;DR] waitForChatResponseCompletion: reply did not complete within ${timeout}ms. Proceeding.`
+        );
+        resolve(false);
+      }
+    }, 250);
+  });
 }
