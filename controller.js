@@ -416,6 +416,14 @@ function findSourceOption(labels, iconName) {
   }) || null;
 }
 
+function findAddSourceButton() {
+  return (
+    document.querySelector('button:not([disabled]).create-new-button') ||
+    document.querySelector('button:not([disabled]).add-source-button') ||
+    document.querySelector('.add-source-button button:not([disabled])')
+  );
+}
+
 /**
  * Wait until the Notebook title (h1.notebook-title) changes from a given initial value.
  * Falls back to timeout if it doesn't change in time.
@@ -628,7 +636,7 @@ async function importAndSummarizeSelectedText(selectedText, injectedTitle) {
     }
 
     updateToast(toastI18n('toastOpeningAddSource', null, 'Opening Add Source menu...'));
-    await waitForElement('button:not([disabled]).create-new-button, button:not([disabled]).add-source-button');
+    await waitForAnyElement([findAddSourceButton]);
 
     // Select the "Text" option
     updateToast(toastI18n('toastSelectingText', null, 'Selecting Text option...'));
@@ -644,7 +652,7 @@ async function importAndSummarizeSelectedText(selectedText, injectedTitle) {
 
     // Robust retry logic: if the menu fails to appear (e.g. click was too fast), try clicking again
     for (let i = 0; i < 5; i++) {
-      const btn = document.querySelector('button:not([disabled]).create-new-button, button:not([disabled]).add-source-button');
+      const btn = findAddSourceButton();
       if (btn) btn.click();
       
       textOption = await waitForAnyElement(textPredicates, 2000);
@@ -724,7 +732,7 @@ async function importAndSummarizeWebpage(passedUrl, passedSourceTitle) {
     }
 
     updateToast(toastI18n('toastOpeningAddSource', null, 'Opening Add Source menu...'));
-    await waitForElement('button:not([disabled]).create-new-button, button:not([disabled]).add-source-button');
+    await waitForAnyElement([findAddSourceButton]);
 
     updateToast(toastI18n('toastSelectingWebsite', null, 'Selecting Website option...'));
     let websiteOption = null;
@@ -739,7 +747,7 @@ async function importAndSummarizeWebpage(passedUrl, passedSourceTitle) {
 
     // Robust retry logic: if the menu fails to appear (e.g. click was too fast), try clicking again
     for (let i = 0; i < 5; i++) {
-      const btn = document.querySelector('button:not([disabled]).create-new-button, button:not([disabled]).add-source-button');
+      const btn = findAddSourceButton();
       if (btn) btn.click();
       
       websiteOption = await waitForAnyElement(websitePredicates, 2000);
@@ -829,7 +837,7 @@ if (typeof chrome !== 'undefined') {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { findSourceOption, isChatResponseComplete, setToastDetail, TOAST_DETAIL_MAX_LENGTH };
+  module.exports = { findAddSourceButton, findSourceOption, isChatResponseComplete, setToastDetail, TOAST_DETAIL_MAX_LENGTH };
 }
 
 /**

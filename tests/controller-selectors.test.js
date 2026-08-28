@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict');
 const { after, test } = require('node:test');
 
-const { findSourceOption } = require('../controller.js');
+const { findAddSourceButton, findSourceOption } = require('../controller.js');
 
 const VISIBLE_OFFSET_PARENT = {};
 const HIDDEN_OFFSET_PARENT = null;
@@ -87,4 +87,39 @@ test('ignores hidden source options', () => {
   ]);
 
   assert.equal(findSourceOption(['網站'], 'link'), null);
+});
+
+function createAddSourceDocument(matches) {
+  return {
+    querySelector(selector) {
+      return matches[selector] ?? null;
+    },
+  };
+}
+
+test('finds the legacy create-new Add Source button', () => {
+  const button = {};
+  global.document = createAddSourceDocument({
+    'button:not([disabled]).create-new-button': button,
+  });
+
+  assert.equal(findAddSourceButton(), button);
+});
+
+test('finds the previous native add-source-button', () => {
+  const button = {};
+  global.document = createAddSourceDocument({
+    'button:not([disabled]).add-source-button': button,
+  });
+
+  assert.equal(findAddSourceButton(), button);
+});
+
+test('finds the current nested Add Source button', () => {
+  const button = {};
+  global.document = createAddSourceDocument({
+    '.add-source-button button:not([disabled])': button,
+  });
+
+  assert.equal(findAddSourceButton(), button);
 });
