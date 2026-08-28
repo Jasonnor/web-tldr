@@ -401,19 +401,82 @@ function waitForElement(selector, timeout = 10000) {
   return waitForAnyElement([() => document.querySelector(selector)], timeout);
 }
 
+const COPIED_TEXT_LABELS = ['Text', 'Copied text', 'Copied Text', '文字', '複製的文字', '复制的文字'];
+
 function findSourceOption(labels, iconName) {
-  const label = Array.from(document.querySelectorAll('span'))
-    .find((span) => labels.includes(span.textContent.trim()) && span.offsetParent !== null);
-  if (label) return label.closest('button') || label;
-
   const buttons = Array.from(document.querySelectorAll('div.drop-zone-actions > button'));
-
-  return buttons.find((button) => {
+  const byIcon = buttons.find((button) => {
     if (button.offsetParent === null) return false;
 
     return Array.from(button.querySelectorAll('mat-icon'))
       .some((icon) => icon.textContent.trim() === iconName);
-  }) || null;
+  });
+  if (byIcon) return byIcon;
+
+  const label = Array.from(document.querySelectorAll('span'))
+    .find((span) => labels.includes(span.textContent.trim()) && span.offsetParent !== null);
+  return label ? (label.closest('button') || label) : null;
+}
+
+function isPlayBooksSourceButton(element) {
+  if (!element) return false;
+  const button = typeof element.closest === 'function' ? (element.closest('button') || element) : element;
+  if (button.classList?.contains('play-books-icon-button')) return true;
+  if (typeof button.querySelector === 'function' &&
+      button.querySelector('.play-books-drop-zone-icon, .play-books-button-content')) {
+    return true;
+  }
+  const ariaLabel = button.getAttribute?.('aria-label') || '';
+  const text = (button.textContent || '').replace(/\s+/g, ' ').trim();
+  return /play\s*(books|圖書|图书)/i.test(ariaLabel) || /play\s*(books|圖書|图书)/i.test(text);
+}
+
+function isPlayBooksPickerVisible() {
+  const picker =
+    document.querySelector('play-books-picker') ||
+    document.querySelector('.play-books-picker-container') ||
+    document.querySelector('.play-books-header-logo');
+  return !!(picker && picker.offsetParent !== null);
+}
+
+function findPlayBooksBackButton() {
+  if (!isPlayBooksPickerVisible()) return null;
+  const backButton =
+    document.querySelector('add-sources-dialog button.back-button') ||
+    document.querySelector('.state-header button.back-button') ||
+    document.querySelector('button.back-button');
+  return backButton && backButton.offsetParent !== null ? backButton : null;
+}
+
+function findCopiedTextOption() {
+  const byLabelOrIcon = findSourceOption(COPIED_TEXT_LABELS, 'content_paste');
+  if (byLabelOrIcon && !isPlayBooksSourceButton(byLabelOrIcon)) return byLabelOrIcon;
+
+  const chip = document.querySelector('#mat-mdc-chip-3');
+  if (chip && !isPlayBooksSourceButton(chip)) return chip;
+
+  const buttons = Array.from(document.querySelectorAll('div.drop-zone-actions > button'))
+    .filter((button) => button.offsetParent !== null && !isPlayBooksSourceButton(button));
+  return buttons[3] || buttons[buttons.length - 1] || null;
+}
+
+function findCopiedTextInput() {
+  return document.querySelector('textarea[formcontrolname="copiedText"]') ||
+    document.querySelector('textarea[formcontrolname="text"]');
+}
+
+async function waitForCopiedTextInput() {
+  const outcome = await waitForAnyElement([
+    findCopiedTextInput,
+    findPlayBooksBackButton,
+  ]);
+  if (!outcome) return null;
+  if (outcome === findCopiedTextInput()) return outcome;
+
+  outcome.click();
+  const option = await waitForAnyElement([findCopiedTextOption], 5000);
+  if (option) option.click();
+  return waitForAnyElement([findCopiedTextInput]);
 }
 
 function findAddSourceButton() {
@@ -638,24 +701,20 @@ async function importAndSummarizeSelectedText(selectedText, injectedTitle) {
     updateToast(toastI18n('toastOpeningAddSource', null, 'Opening Add Source menu...'));
     await waitForAnyElement([findAddSourceButton]);
 
-    // Select the "Text" option
+    // Select the "Text" option. New UIs insert Play Books as the 4th drop-zone
+    // button, so match Copied text by icon/label and fall back to the old layout.
     updateToast(toastI18n('toastSelectingText', null, 'Selecting Text option...'));
     let textOption = null;
-    const textPredicates = [
-      () => document.querySelector('div.drop-zone-actions > button:nth-child(4)'),
-      () => document.querySelector('#mat-mdc-chip-3'),
-      () => findSourceOption(
-        ['Text', 'Copied text', '文字', '複製的文字'],
-        'content_paste'
-      ),
-    ];
 
     // Robust retry logic: if the menu fails to appear (e.g. click was too fast), try clicking again
     for (let i = 0; i < 5; i++) {
+      const backButton = findPlayBooksBackButton();
+      if (backButton) backButton.click();
+
       const btn = findAddSourceButton();
       if (btn) btn.click();
-      
-      textOption = await waitForAnyElement(textPredicates, 2000);
+
+      textOption = await waitForAnyElement([findCopiedTextOption], 2000);
       if (textOption) break;
       await new Promise(r => setTimeout(r, 500));
     }
@@ -664,10 +723,7 @@ async function importAndSummarizeSelectedText(selectedText, injectedTitle) {
     textOption.click();
 
     updateToast(toastI18n('toastAddingText', null, 'Adding selected text...'), 'spinner', selectedText);
-    const textInput = await waitForAnyElement([
-      () => document.querySelector('textarea[formcontrolname="copiedText"]'),
-      () => document.querySelector('textarea[formcontrolname="text"]'),
-    ]);
+    const textInput = await waitForCopiedTextInput();
     textInput.value = selectedText;
     textInput.dispatchEvent(new Event('input', { bubbles: true }));
 
@@ -837,7 +893,15 @@ if (typeof chrome !== 'undefined') {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { findAddSourceButton, findSourceOption, isChatResponseComplete, setToastDetail, TOAST_DETAIL_MAX_LENGTH };
+  module.exports = {
+    findAddSourceButton,
+    findSourceOption,
+    findCopiedTextOption,
+    findPlayBooksBackButton,
+    isChatResponseComplete,
+    setToastDetail,
+    TOAST_DETAIL_MAX_LENGTH,
+  };
 }
 
 /**
