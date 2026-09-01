@@ -379,7 +379,13 @@ function waitForAnyElement(predicates, timeout = 10000) {
     // Check immediately in case it's already there
     if (checkPredicates()) return;
 
-    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ['disabled', 'class', 'aria-disabled'],
+    });
 
     // Timeout logic
     timeoutId = setTimeout(() => {
@@ -462,7 +468,92 @@ function findCopiedTextOption() {
 
 function findCopiedTextInput() {
   return document.querySelector('textarea[formcontrolname="copiedText"]') ||
+    document.querySelector('textarea.copied-text-input-textarea') ||
     document.querySelector('textarea[formcontrolname="text"]');
+}
+
+const DIALOG_INSERT_LABELS = ['Insert', '插入', '挿入', 'Insérer', 'Einfügen', 'Insertar', 'Inserir'];
+
+function isEnabledActionButton(button) {
+  if (!button || button.offsetParent === null) return false;
+  if (button.disabled) return false;
+  if (typeof button.hasAttribute === 'function' && button.hasAttribute('disabled')) return false;
+  const classList = button.classList;
+  if (classList?.contains?.('mat-mdc-button-disabled') || classList?.contains?.('mdc-button--disabled')) {
+    return false;
+  }
+  return true;
+}
+
+function findEnabledDialogActionButton(root) {
+  if (!root || typeof root.querySelectorAll !== 'function') return null;
+  const seen = new Set();
+  const buttons = [];
+  for (const selector of ['.mat-mdc-dialog-actions button', '[mat-dialog-actions] button']) {
+    for (const button of Array.from(root.querySelectorAll(selector))) {
+      if (seen.has(button)) continue;
+      seen.add(button);
+      buttons.push(button);
+    }
+  }
+
+  const enabled = buttons.filter(isEnabledActionButton);
+  if (!enabled.length) return null;
+
+  const primary = enabled.find((button) =>
+    button.classList?.contains?.('mat-mdc-unelevated-button') ||
+    button.classList?.contains?.('mdc-button--unelevated') ||
+    button.classList?.contains?.('mat-primary')
+  );
+  if (primary) return primary;
+
+  const byLabel = enabled.find((button) => {
+    const text = (button.textContent || '').replace(/\s+/g, ' ').trim();
+    return DIALOG_INSERT_LABELS.includes(text);
+  });
+  if (byLabel) return byLabel;
+
+  return enabled[enabled.length - 1];
+}
+
+function findCopiedTextInsertButton() {
+  const fromDialog = findEnabledDialogActionButton(document.querySelector('add-sources-dialog'));
+  if (fromDialog) return fromDialog;
+
+  return document.querySelector(
+    'add-sources-dialog > div > div.mat-mdc-dialog-actions.mdc-dialog__actions.mat-mdc-dialog-actions-align-end.ng-star-inserted > button:not([disabled])'
+  ) || document.querySelector(
+    '#mat-mdc-dialog-0 > div > div > upload-dialog > div > div.content > paste-text > form > button:not([disabled])'
+  ) || null;
+}
+
+function findWebsiteImportButton() {
+  const fromDialog = findEnabledDialogActionButton(document.querySelector('add-sources-dialog'));
+  if (fromDialog) return fromDialog;
+
+  return document.querySelector(
+    'add-sources-dialog > div > div.mat-mdc-dialog-actions.mdc-dialog__actions.mat-mdc-dialog-actions-align-end.ng-star-inserted > button:not([disabled])'
+  ) || document.querySelector(
+    '#mat-mdc-dialog-0 > div > div > upload-dialog > div > div.content > website-upload > form > button:not([disabled])'
+  ) || null;
+}
+
+function fillTextInput(element, value) {
+  if (!element) return;
+  if (typeof element.focus === 'function') element.focus();
+
+  const protoSetter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(element), 'value')?.set;
+  const textareaSetter =
+    typeof HTMLTextAreaElement !== 'undefined'
+      ? Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set
+      : null;
+  const setter = protoSetter || textareaSetter;
+  if (setter) setter.call(element, value);
+  else element.value = value;
+
+  element.dispatchEvent?.(new Event('input', { bubbles: true }));
+  element.dispatchEvent?.(new Event('change', { bubbles: true }));
+  if (typeof element.blur === 'function') element.blur();
 }
 
 async function waitForCopiedTextInput() {
@@ -724,14 +815,12 @@ async function importAndSummarizeSelectedText(selectedText, injectedTitle) {
 
     updateToast(toastI18n('toastAddingText', null, 'Adding selected text...'), 'spinner', selectedText);
     const textInput = await waitForCopiedTextInput();
-    textInput.value = selectedText;
-    textInput.dispatchEvent(new Event('input', { bubbles: true }));
+    if (!textInput) throw new Error('Copied text input not found');
+    fillTextInput(textInput, selectedText);
 
     setNotebookTitle('importing');
-    const importButton = await waitForAnyElement([
-      () => document.querySelector('add-sources-dialog > div > div.mat-mdc-dialog-actions.mdc-dialog__actions.mat-mdc-dialog-actions-align-end.ng-star-inserted > button:not([disabled])'),
-      () => document.querySelector('#mat-mdc-dialog-0 > div > div > upload-dialog > div > div.content > paste-text > form > button:not([disabled])'),
-    ]);
+    const importButton = await waitForAnyElement([findCopiedTextInsertButton]);
+    if (!importButton) throw new Error('Insert button not found');
     importButton.click();
 
     // Clear task after importing
@@ -819,14 +908,11 @@ async function importAndSummarizeWebpage(passedUrl, passedSourceTitle) {
     const urlInput = await waitForAnyElement([
       () => document.querySelector('textarea[formcontrolname="urls"]'),
     ]);
-    urlInput.value = url;
-    urlInput.dispatchEvent(new Event('input', { bubbles: true }));
+    fillTextInput(urlInput, url);
     updateToast(toastI18n('toastImporting', null, 'Importing webpage...'));
     setNotebookTitle('importing');
-    const importButton = await waitForAnyElement([
-      () => document.querySelector('add-sources-dialog > div > div.mat-mdc-dialog-actions.mdc-dialog__actions.mat-mdc-dialog-actions-align-end.ng-star-inserted > button:not([disabled])'),
-      () => document.querySelector('#mat-mdc-dialog-0 > div > div > upload-dialog > div > div.content > website-upload > form > button:not([disabled])'),
-    ]);
+    const importButton = await waitForAnyElement([findWebsiteImportButton]);
+    if (!importButton) throw new Error('Import button not found');
     importButton.click();
 
     // Clear task after importing
@@ -897,6 +983,8 @@ if (typeof module !== 'undefined') {
     findAddSourceButton,
     findSourceOption,
     findCopiedTextOption,
+    findCopiedTextInput,
+    findCopiedTextInsertButton,
     findPlayBooksBackButton,
     isChatResponseComplete,
     setToastDetail,

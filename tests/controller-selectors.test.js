@@ -3,6 +3,8 @@ const { after, test } = require('node:test');
 
 const {
   findAddSourceButton,
+  findCopiedTextInput,
+  findCopiedTextInsertButton,
   findCopiedTextOption,
   findPlayBooksBackButton,
   findSourceOption,
@@ -264,4 +266,133 @@ test('finds the current nested Add Source button', () => {
   });
 
   assert.equal(findAddSourceButton(), button);
+});
+
+function createActionButton({
+  label = 'Insert',
+  disabled = false,
+  visible = true,
+  classNames = ['mat-mdc-unelevated-button', 'mat-primary'],
+} = {}) {
+  return {
+    textContent: label,
+    offsetParent: visible ? VISIBLE_OFFSET_PARENT : HIDDEN_OFFSET_PARENT,
+    disabled,
+    classList: {
+      contains(name) {
+        return classNames.includes(name);
+      },
+    },
+    hasAttribute(name) {
+      return name === 'disabled' && disabled;
+    },
+  };
+}
+
+function createDialogWithActions(buttons, extraQuerySelector = {}) {
+  const dialog = {
+    querySelectorAll(selector) {
+      if (
+        selector === '.mat-mdc-dialog-actions button' ||
+        selector === '[mat-dialog-actions] button'
+      ) {
+        return buttons;
+      }
+      return [];
+    },
+  };
+  return {
+    querySelector(selector) {
+      if (selector === 'add-sources-dialog') return dialog;
+      return extraQuerySelector[selector] ?? null;
+    },
+  };
+}
+
+test('finds the current copied-text textarea', () => {
+  const textarea = {};
+  global.document = createAddSourceDocument({
+    'textarea[formcontrolname="copiedText"]': textarea,
+  });
+
+  assert.equal(findCopiedTextInput(), textarea);
+});
+
+test('finds the current copied-text textarea by class when formcontrolname is absent', () => {
+  const textarea = {};
+  global.document = createAddSourceDocument({
+    'textarea.copied-text-input-textarea': textarea,
+  });
+
+  assert.equal(findCopiedTextInput(), textarea);
+});
+
+test('finds the legacy copied-text textarea', () => {
+  const textarea = {};
+  global.document = createAddSourceDocument({
+    'textarea[formcontrolname="text"]': textarea,
+  });
+
+  assert.equal(findCopiedTextInput(), textarea);
+});
+
+test('finds the current Insert button without ng-star-inserted', () => {
+  const insert = createActionButton({ label: '插入' });
+  global.document = createDialogWithActions([insert]);
+
+  assert.equal(findCopiedTextInsertButton(), insert);
+});
+
+test('ignores the current Insert button while it is disabled', () => {
+  const insert = createActionButton({
+    label: '插入',
+    disabled: true,
+    classNames: ['mat-mdc-unelevated-button', 'mat-primary', 'mat-mdc-button-disabled'],
+  });
+  global.document = createDialogWithActions([insert]);
+
+  assert.equal(findCopiedTextInsertButton(), null);
+});
+
+test('prefers the primary Insert action over other enabled dialog buttons', () => {
+  const cancel = createActionButton({
+    label: 'Cancel',
+    classNames: [],
+  });
+  const insert = createActionButton({ label: '插入' });
+  global.document = createDialogWithActions([cancel, insert]);
+
+  assert.equal(findCopiedTextInsertButton(), insert);
+});
+
+test('keeps the previous ng-star-inserted Insert selector as a fallback', () => {
+  const insert = createActionButton({ label: 'Insert' });
+  global.document = {
+    querySelector(selector) {
+      if (selector === 'add-sources-dialog') {
+        return { querySelectorAll() { return []; } };
+      }
+      if (selector === 'add-sources-dialog > div > div.mat-mdc-dialog-actions.mdc-dialog__actions.mat-mdc-dialog-actions-align-end.ng-star-inserted > button:not([disabled])') {
+        return insert;
+      }
+      return null;
+    },
+  };
+
+  assert.equal(findCopiedTextInsertButton(), insert);
+});
+
+test('finds the legacy paste-text form Insert button', () => {
+  const insert = createActionButton({ label: 'Insert' });
+  global.document = {
+    querySelector(selector) {
+      if (selector === 'add-sources-dialog') return null;
+      if (selector === '#mat-mdc-dialog-0 > div > div > upload-dialog > div > div.content > paste-text > form > button:not([disabled])') {
+        return insert;
+      }
+      return null;
+    },
+  };
+
+  assert.equal(findCopiedTextInsertButton(), insert);
 });
