@@ -2,12 +2,15 @@ const assert = require('node:assert/strict');
 const { after, test } = require('node:test');
 
 const {
+  clickAddSourceButton,
   findAddSourceButton,
   findCopiedTextInput,
   findCopiedTextInsertButton,
   findCopiedTextOption,
   findPlayBooksBackButton,
   findSourceOption,
+  findSubmitButton,
+  resetAddSourceClickState,
 } = require('../controller.js');
 
 const VISIBLE_OFFSET_PARENT = {};
@@ -266,6 +269,137 @@ test('finds the current nested Add Source button', () => {
   });
 
   assert.equal(findAddSourceButton(), button);
+});
+
+test('finds the projects header Create notebook button', () => {
+  const button = {};
+  global.document = createAddSourceDocument({
+    '.projects-header-actions button:not([disabled])': button,
+  });
+
+  assert.equal(findAddSourceButton(), button);
+});
+
+test('chooses the projects header button with the add icon', () => {
+  const other = {
+    textContent: 'Filter',
+    offsetParent: VISIBLE_OFFSET_PARENT,
+    disabled: false,
+    classList: { contains() { return false; } },
+    hasAttribute() { return false; },
+    getAttribute() { return ''; },
+    querySelectorAll() { return []; },
+  };
+  const createNotebook = {
+    textContent: '新增筆記本',
+    offsetParent: VISIBLE_OFFSET_PARENT,
+    disabled: false,
+    classList: { contains() { return false; } },
+    hasAttribute() { return false; },
+    getAttribute(name) {
+      return name === 'aria-label' ? '新增筆記本' : '';
+    },
+    querySelectorAll(selector) {
+      if (selector === 'mat-icon') return [{ textContent: 'add_2' }];
+      return [];
+    },
+  };
+  global.document = {
+    querySelector() {
+      return null;
+    },
+    querySelectorAll(selector) {
+      if (selector === '.projects-header-actions button') return [other, createNotebook];
+      return [];
+    },
+  };
+
+  assert.equal(findAddSourceButton(), createNotebook);
+});
+
+test('prefers an existing Add Source button over the projects header Create notebook button', () => {
+  const addSource = {};
+  const createNotebook = {};
+  global.document = createAddSourceDocument({
+    '.add-source-button button:not([disabled])': addSource,
+    '.projects-header-actions button:not([disabled])': createNotebook,
+  });
+
+  assert.equal(findAddSourceButton(), addSource);
+});
+
+test('finds the legacy prompt submit button', () => {
+  const button = {};
+  global.document = createAddSourceDocument({
+    'button[type="submit"]:not([disabled])': button,
+  });
+
+  assert.equal(findSubmitButton(), button);
+});
+
+test('finds the icon submit button nested in submit-button', () => {
+  const button = {};
+  global.document = createAddSourceDocument({
+    '.submit-button button:not([disabled])': button,
+  });
+
+  assert.equal(findSubmitButton(), button);
+});
+
+test('finds the arrow-up submit button in the prompt bar', () => {
+  const other = {
+    textContent: '',
+    offsetParent: VISIBLE_OFFSET_PARENT,
+    disabled: false,
+    classList: { contains() { return false; } },
+    hasAttribute() { return false; },
+    getAttribute() { return ''; },
+    querySelectorAll() { return []; },
+  };
+  const submit = {
+    textContent: 'arrow_upward',
+    offsetParent: VISIBLE_OFFSET_PARENT,
+    disabled: false,
+    classList: { contains() { return false; } },
+    hasAttribute() { return false; },
+    getAttribute(name) {
+      return name === 'aria-label' ? '提交' : '';
+    },
+    querySelectorAll(selector) {
+      if (selector === 'mat-icon') return [{ textContent: 'arrow_upward' }];
+      return [];
+    },
+  };
+  global.document = {
+    querySelector() {
+      return null;
+    },
+    querySelectorAll(selector) {
+      if (selector === '.bottom-right-container button') return [other, submit];
+      return [];
+    },
+  };
+
+  assert.equal(findSubmitButton(), submit);
+});
+
+test('clicks the projects header Create notebook button only once', () => {
+  resetAddSourceClickState();
+  let clicks = 0;
+  const button = {
+    click() {
+      clicks += 1;
+    },
+  };
+  global.document = createAddSourceDocument({
+    '.projects-header-actions button:not([disabled])': button,
+  });
+
+  clickAddSourceButton();
+  clickAddSourceButton();
+
+  assert.equal(clicks, 1);
+  resetAddSourceClickState();
 });
 
 function createActionButton({

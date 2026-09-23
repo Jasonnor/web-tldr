@@ -570,12 +570,99 @@ async function waitForCopiedTextInput() {
   return waitForAnyElement([findCopiedTextInput]);
 }
 
-function findAddSourceButton() {
+const CREATE_NOTEBOOK_LABELS = [
+  'Create notebook',
+  'New notebook',
+  '新增筆記本',
+  '建立筆記本',
+  '新建笔记本',
+  '创建笔记本',
+  '新しいノートブック',
+  'Créer un notebook',
+  'Neues Notizbuch',
+  'Crear cuaderno',
+  'Criar caderno',
+];
+
+let projectsHeaderNotebookClicked = false;
+
+function resetAddSourceClickState() {
+  projectsHeaderNotebookClicked = false;
+}
+
+function isCreateNotebookControl(button) {
+  const icons = typeof button.querySelectorAll === 'function'
+    ? Array.from(button.querySelectorAll('mat-icon'))
+    : [];
+  if (icons.some((icon) => (icon.textContent || '').trim() === 'add_2')) return true;
+
+  const label = `${button.getAttribute?.('aria-label') || ''} ${button.textContent || ''}`
+    .replace(/\s+/g, ' ')
+    .trim();
+  return CREATE_NOTEBOOK_LABELS.some((text) => label.includes(text));
+}
+
+function findProjectsHeaderNotebookButton() {
+  if (typeof document.querySelectorAll === 'function') {
+    const buttons = Array.from(document.querySelectorAll('.projects-header-actions button'));
+    if (buttons.length) {
+      const enabled = buttons.filter(isEnabledActionButton);
+      return enabled.find(isCreateNotebookControl) || (enabled.length === 1 ? enabled[0] : null);
+    }
+  }
+
+  return document.querySelector('.projects-header-actions button:not([disabled])');
+}
+
+function findLegacyAddSourceButton() {
   return (
     document.querySelector('button:not([disabled]).create-new-button') ||
     document.querySelector('button:not([disabled]).add-source-button') ||
     document.querySelector('.add-source-button button:not([disabled])')
   );
+}
+
+function findAddSourceButton() {
+  return findLegacyAddSourceButton() || findProjectsHeaderNotebookButton();
+}
+
+const SUBMIT_LABELS = ['Submit', 'Send', '提交', '送出', '送信', 'Envoyer', 'Senden', 'Enviar'];
+
+function findArrowSubmitButton() {
+  if (typeof document.querySelectorAll !== 'function') return null;
+  const buttons = Array.from(document.querySelectorAll('.bottom-right-container button'))
+    .filter(isEnabledActionButton);
+  return buttons.find((button) => {
+    const icons = typeof button.querySelectorAll === 'function'
+      ? Array.from(button.querySelectorAll('mat-icon'))
+      : [];
+    if (icons.some((icon) => (icon.textContent || '').trim() === 'arrow_upward')) return true;
+    const label = `${button.getAttribute?.('aria-label') || ''} ${button.textContent || ''}`
+      .replace(/\s+/g, ' ')
+      .trim();
+    return SUBMIT_LABELS.some((text) => label.includes(text));
+  }) || null;
+}
+
+function findSubmitButton() {
+  return document.querySelector('button[type="submit"]:not([disabled])') ||
+    document.querySelector('.submit-button button:not([disabled])') ||
+    findArrowSubmitButton();
+}
+
+function clickAddSourceButton() {
+  const legacy = findLegacyAddSourceButton();
+  if (legacy) {
+    if (typeof legacy.click === 'function') legacy.click();
+    return legacy;
+  }
+
+  if (projectsHeaderNotebookClicked) return null;
+  const createNotebook = findProjectsHeaderNotebookButton();
+  if (!createNotebook) return null;
+  projectsHeaderNotebookClicked = true;
+  if (typeof createNotebook.click === 'function') createNotebook.click();
+  return createNotebook;
 }
 
 /**
@@ -681,7 +768,7 @@ async function handlePromptAndGenerate(targetUrl = null) {
 
     // Wait for either the Submit button (success) or an Error container (failure)
     const resultElement = await waitForAnyElement([
-      () => document.querySelector('button[type="submit"]:not([disabled])'),
+      findSubmitButton,
       () => {
         const errorContainer = document.querySelector('.single-source-error-container');
         if (!errorContainer || !targetUrl) return null;
@@ -719,7 +806,7 @@ async function handlePromptAndGenerate(targetUrl = null) {
 
     // Double check we actually have the button (in case of weird timeout/null return)
     if (!submitButton) {
-         submitButton = document.querySelector('button[type="submit"]:not([disabled])');
+         submitButton = findSubmitButton();
     }
 
     if (!submitButton) {
@@ -743,8 +830,8 @@ async function handlePromptAndGenerate(targetUrl = null) {
     let attempts = 0;
 
     while (promptTextarea.value !== '' && attempts < maxAttempts) {
-      submitButton = await waitForElement('button[type="submit"]:not([disabled])');
-      submitButton.click();
+      submitButton = await waitForAnyElement([findSubmitButton]);
+      if (submitButton) submitButton.click();
       attempts++;
 
       // Wait for the UI to update
@@ -789,6 +876,7 @@ async function importAndSummarizeSelectedText(selectedText, injectedTitle) {
       spinnerAttempts++;
     }
 
+    resetAddSourceClickState();
     updateToast(toastI18n('toastOpeningAddSource', null, 'Opening Add Source menu...'));
     await waitForAnyElement([findAddSourceButton]);
 
@@ -802,8 +890,7 @@ async function importAndSummarizeSelectedText(selectedText, injectedTitle) {
       const backButton = findPlayBooksBackButton();
       if (backButton) backButton.click();
 
-      const btn = findAddSourceButton();
-      if (btn) btn.click();
+      clickAddSourceButton();
 
       textOption = await waitForAnyElement([findCopiedTextOption], 2000);
       if (textOption) break;
@@ -876,6 +963,7 @@ async function importAndSummarizeWebpage(passedUrl, passedSourceTitle) {
       spinnerAttempts++;
     }
 
+    resetAddSourceClickState();
     updateToast(toastI18n('toastOpeningAddSource', null, 'Opening Add Source menu...'));
     await waitForAnyElement([findAddSourceButton]);
 
@@ -892,8 +980,7 @@ async function importAndSummarizeWebpage(passedUrl, passedSourceTitle) {
 
     // Robust retry logic: if the menu fails to appear (e.g. click was too fast), try clicking again
     for (let i = 0; i < 5; i++) {
-      const btn = findAddSourceButton();
-      if (btn) btn.click();
+      clickAddSourceButton();
       
       websiteOption = await waitForAnyElement(websitePredicates, 2000);
       if (websiteOption) break;
@@ -980,12 +1067,15 @@ if (typeof chrome !== 'undefined') {
 
 if (typeof module !== 'undefined') {
   module.exports = {
+    clickAddSourceButton,
     findAddSourceButton,
+    resetAddSourceClickState,
     findSourceOption,
     findCopiedTextOption,
     findCopiedTextInput,
     findCopiedTextInsertButton,
     findPlayBooksBackButton,
+    findSubmitButton,
     isChatResponseComplete,
     setToastDetail,
     TOAST_DETAIL_MAX_LENGTH,
