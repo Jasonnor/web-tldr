@@ -408,14 +408,45 @@ function waitForElement(selector, timeout = 10000) {
 }
 
 const COPIED_TEXT_LABELS = ['Text', 'Copied text', 'Copied Text', '文字', '複製的文字', '复制的文字'];
+const WEBSITE_LABELS = ['Website', 'Websites', '網頁', 'Link', '連結', '網站'];
+const WEBSITE_ICONS = ['link', 'link_2'];
+
+const SOURCE_OPTION_BUTTON_SELECTORS = [
+  'div.drop-zone-actions > button',
+  'div.source-buttons > button.source-action-button',
+  'button.source-action-button',
+];
+
+function listSourceOptionButtons() {
+  const seen = new Set();
+  const buttons = [];
+  for (const selector of SOURCE_OPTION_BUTTON_SELECTORS) {
+    if (typeof document.querySelectorAll !== 'function') continue;
+    for (const button of Array.from(document.querySelectorAll(selector))) {
+      if (seen.has(button)) continue;
+      seen.add(button);
+      buttons.push(button);
+    }
+  }
+  return buttons;
+}
+
+function normalizeIconNames(iconName) {
+  if (!iconName) return [];
+  return Array.isArray(iconName) ? iconName : [iconName];
+}
+
+function buttonHasIcon(button, iconName) {
+  const iconNames = normalizeIconNames(iconName);
+  if (!iconNames.length || typeof button.querySelectorAll !== 'function') return false;
+  return Array.from(button.querySelectorAll('mat-icon'))
+    .some((icon) => iconNames.includes((icon.textContent || '').trim()));
+}
 
 function findSourceOption(labels, iconName) {
-  const buttons = Array.from(document.querySelectorAll('div.drop-zone-actions > button'));
-  const byIcon = buttons.find((button) => {
+  const byIcon = listSourceOptionButtons().find((button) => {
     if (button.offsetParent === null) return false;
-
-    return Array.from(button.querySelectorAll('mat-icon'))
-      .some((icon) => icon.textContent.trim() === iconName);
+    return buttonHasIcon(button, iconName);
   });
   if (byIcon) return byIcon;
 
@@ -461,7 +492,7 @@ function findCopiedTextOption() {
   const chip = document.querySelector('#mat-mdc-chip-3');
   if (chip && !isPlayBooksSourceButton(chip)) return chip;
 
-  const buttons = Array.from(document.querySelectorAll('div.drop-zone-actions > button'))
+  const buttons = listSourceOptionButtons()
     .filter((button) => button.offsetParent !== null && !isPlayBooksSourceButton(button));
   return buttons[3] || buttons[buttons.length - 1] || null;
 }
@@ -971,11 +1002,9 @@ async function importAndSummarizeWebpage(passedUrl, passedSourceTitle) {
     let websiteOption = null;
     const websitePredicates = [
       () => document.querySelector('div.drop-zone-actions > button:nth-child(2)'),
+      () => document.querySelector('div.source-buttons > button.source-action-button:nth-child(2)'),
       () => document.querySelector('#mat-mdc-chip-1'),
-      () => findSourceOption(
-        ['Website', '網頁', 'Link', '連結', '網站'],
-        'link'
-      ),
+      () => findSourceOption(WEBSITE_LABELS, WEBSITE_ICONS),
     ];
 
     // Robust retry logic: if the menu fails to appear (e.g. click was too fast), try clicking again
@@ -1070,6 +1099,7 @@ if (typeof module !== 'undefined') {
     clickAddSourceButton,
     findAddSourceButton,
     resetAddSourceClickState,
+    listSourceOptionButtons,
     findSourceOption,
     findCopiedTextOption,
     findCopiedTextInput,
@@ -1079,6 +1109,8 @@ if (typeof module !== 'undefined') {
     isChatResponseComplete,
     setToastDetail,
     TOAST_DETAIL_MAX_LENGTH,
+    WEBSITE_LABELS,
+    WEBSITE_ICONS,
   };
 }
 

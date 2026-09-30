@@ -10,7 +10,10 @@ const {
   findPlayBooksBackButton,
   findSourceOption,
   findSubmitButton,
+  listSourceOptionButtons,
   resetAddSourceClickState,
+  WEBSITE_ICONS,
+  WEBSITE_LABELS,
 } = require('../controller.js');
 
 const VISIBLE_OFFSET_PARENT = {};
@@ -64,7 +67,9 @@ function createOption({
   return option;
 }
 
-function createDocument(options, additionalSpans = []) {
+function createDocument(options, additionalSpans = [], { containers = ['drop-zone'] } = {}) {
+  const dropZone = containers.includes('drop-zone');
+  const sourceButtons = containers.includes('source-buttons');
   return {
     querySelector() {
       return null;
@@ -76,7 +81,16 @@ function createDocument(options, additionalSpans = []) {
           ...additionalSpans,
         ];
       }
-      if (selector === 'div.drop-zone-actions > button') {
+      if (dropZone && selector === 'div.drop-zone-actions > button') {
+        return options;
+      }
+      if (
+        sourceButtons &&
+        (
+          selector === 'div.source-buttons > button.source-action-button' ||
+          selector === 'button.source-action-button'
+        )
+      ) {
         return options;
       }
       return [];
@@ -234,6 +248,83 @@ test('ignores hidden source options', () => {
   ]);
 
   assert.equal(findSourceOption(['網站'], 'link'), null);
+});
+
+test('finds luminous Websites via link_2 when drop-zone-actions is absent', () => {
+  const websites = createOption({
+    label: 'Websites',
+    icons: ['link_2', 'video_youtube'],
+    className: 'source-action-button',
+  });
+  global.document = createDocument([
+    createOption({ label: 'Upload files', icons: ['upload'], className: 'source-action-button' }),
+    websites,
+    createOption({
+      label: 'Books',
+      className: 'source-action-button play-books-icon-button',
+      ariaLabel: 'Google Play Books',
+      innerSelectors: ['.play-books-drop-zone-icon', '.play-books-button-content'],
+    }),
+    createOption({ label: 'Drive', icons: ['drive'], className: 'source-action-button' }),
+    createOption({ label: 'Copied text', icons: ['content_paste'], className: 'source-action-button' }),
+  ], [], { containers: ['source-buttons'] });
+
+  assert.equal(findSourceOption(WEBSITE_LABELS, WEBSITE_ICONS), websites);
+  assert.equal(findSourceOption(['Website'], 'link_2'), websites);
+});
+
+test('finds luminous Copied text via content_paste when drop-zone-actions is absent', () => {
+  const copiedText = createOption({
+    label: 'Copied text',
+    icons: ['content_paste'],
+    className: 'source-action-button',
+  });
+  global.document = createDocument([
+    createOption({ label: 'Upload files', icons: ['upload'], className: 'source-action-button' }),
+    createOption({
+      label: 'Websites',
+      icons: ['link_2', 'video_youtube'],
+      className: 'source-action-button',
+    }),
+    createOption({
+      label: 'Books',
+      className: 'source-action-button play-books-icon-button',
+      ariaLabel: 'Google Play Books',
+      innerSelectors: ['.play-books-drop-zone-icon', '.play-books-button-content'],
+    }),
+    createOption({ label: 'Drive', icons: ['drive'], className: 'source-action-button' }),
+    copiedText,
+  ], [], { containers: ['source-buttons'] });
+
+  assert.equal(findSourceOption(['Text', 'Copied text'], 'content_paste'), copiedText);
+  assert.equal(findCopiedTextOption(), copiedText);
+});
+
+test('lists source option buttons from both legacy and luminous containers without duplicates', () => {
+  const legacy = createOption({ label: 'Website', icons: ['link'] });
+  const luminous = createOption({
+    label: 'Websites',
+    icons: ['link_2'],
+    className: 'source-action-button',
+  });
+  const shared = createOption({
+    label: 'Shared',
+    icons: ['link'],
+    className: 'source-action-button',
+  });
+  global.document = {
+    querySelector() {
+      return null;
+    },
+    querySelectorAll(selector) {
+      if (selector === 'div.drop-zone-actions > button') return [legacy, shared];
+      if (selector === 'div.source-buttons > button.source-action-button') return [luminous, shared];
+      if (selector === 'button.source-action-button') return [luminous, shared];
+      return [];
+    },
+  };
+
+  assert.deepEqual(listSourceOptionButtons(), [legacy, shared, luminous]);
 });
 
 function createAddSourceDocument(matches) {
